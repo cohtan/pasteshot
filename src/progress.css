@@ -1,0 +1,124 @@
+:root {
+  color: #241f1a;
+  background: #f6f3ec;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 16px 18px 18px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #6d645b;
+}
+
+button.link {
+  padding: 0;
+  background: transparent;
+  color: #6d645b;
+  font-size: 12px;
+}
+
+h1 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.steps {
+  display: flex;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  flex: 1;
+  margin: 0;
+  padding: 6px 0 7px;
+  border-radius: 999px;
+  background: #e7e1d6;
+  color: #6d645b;
+  font-size: 13px;
+  text-align: center;
+}
+
+.steps li.current {
+  background: #1d3c32;
+  color: #f7f4ee;
+}
+
+.steps li.done {
+  background: #d5e4dc;
+  color: #1d3c32;
+}
+
+#detail {
+  min-height: 1.5em;
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.track {
+  height: 6px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: #e7e1d6;
+  overflow: hidden;
+}
+
+#bar {
+  width: 0;
+  height: 100%;
+  background: #1d3c32;
+}
+
+#note {
+  margin: 10px 0 0;
+  color: #6d645b;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #1d3c32;
+  color: #f7f4ee;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button.quiet {
+  background: transparent;
+  color: #1d3c32;
+}
+
+button:focus-visible {
+  outline: 3px solid #1d3c32;
+  outline-offset: 2px;
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PasteShot</title>
+    <link rel="stylesheet" href="progress.css" />
+  </head>
+  <body>
+    <div class="top">
+      <p class="eyebrow">PasteShot</p>
+      <button id="settings" type="button" class="link">設定</button>
+    </div>
+    <h1 id="title">撮影を始めています</h1>
+    <ol class="steps" id="steps">
+      <li id="step-start">開始</li>
+      <li id="step-scroll">撮影</li>
+      <li id="step-copy">コピー</li>
+    </ol>
+    <p id="detail" role="status">ページはそのままにしてください。</p>
+    <div class="track" id="track" hidden>
+      <div id="bar"></div>
+    </div>
+    <p id="note" hidden></p>
+    <div class="actions" id="actions" hidden></div>
+    <script type="module" src="progress.js"></script>
+  </body>
+</html>

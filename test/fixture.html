@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>pasteshot fixture</title>
+    <style>
+      html, body { margin: 0; background: #ffffff; }
+      header[data-overlay="top"] {
+        position: fixed; inset: 0 0 auto 0; height: 48px;
+        background: #00aa55; z-index: 2;
+      }
+      footer[data-overlay="bottom"] {
+        position: fixed; inset: auto 0 0 0; height: 36px;
+        background: #cc2244; z-index: 2;
+      }
+      .sticky { position: sticky; top: 48px; height: 32px; background: #2266cc; z-index: 1; }
+      .spacer-top { height: 48px; background: #00aa55; }
+      .band { height: 400px; }
+      #tail { height: 200px; background: #ffcc00; }
+      .spacer-bottom { height: 36px; background: #111111; }
+    </style>
+  </head>
+  <body>
+    <header data-overlay="top" data-color="#00aa55">HEADER</header>
+    <div class="spacer-top" data-color="#00aa55"></div>
+    <div class="sticky" data-color="#2266cc">STICKY</div>
+    <div class="band" data-color="#c8d6e5" style="background:#c8d6e5">BAND0</div>
+    <div class="band" data-color="#f6d6c2" style="background:#f6d6c2">BAND1</div>
+    <div class="band" data-color="#d5e8d4" style="background:#d5e8d4">BAND2</div>
+    <div class="band" data-color="#e6d5f2" style="background:#e6d5f2">BAND3</div>
+    <div class="band" data-color="#f7e7a3" style="background:#f7e7a3">BAND4</div>
+    <div class="band" data-color="#f5c2c7" style="background:#f5c2c7">BAND5</div>
+    <div id="tail" data-color="#ffcc00">TAIL</div>
+    <div class="spacer-bottom" data-color="#111111"></div>
+    <footer data-overlay="bottom" data-color="#cc2244">FOOTER</footer>
+  </body>
+</html>

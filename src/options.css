@@ -1,0 +1,99 @@
+:root {
+  color: #241f1a;
+  background: #ebe6dc;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+  line-height: 1.45;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; }
+
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 56px 28px 80px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #6d645b;
+}
+
+h1 {
+  margin: 6px 0 32px;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.panel {
+  padding: 18px 10px 10px;
+  border-radius: 18px;
+  background: #f7f4ee;
+  box-shadow: 0 10px 30px rgba(50, 36, 20, 0.06);
+}
+
+h2 {
+  margin: 0 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #6d645b;
+}
+
+.choices {
+  display: grid;
+  gap: 2px;
+}
+
+.choice {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  padding: 12px 14px 13px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.choice:hover { background: rgba(36, 31, 26, 0.03); }
+
+.choice:has(input:checked) { background: #e5f0ea; }
+
+.choice:has(input:focus-visible) {
+  outline: 3px solid #1d3c32;
+  outline-offset: 2px;
+}
+
+.choice input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: #1d3c32;
+}
+
+.choice strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.choice small {
+  display: block;
+  margin-top: 3px;
+  color: #6d645b;
+  font-size: 13px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+#saved {
+  min-height: 1.5em;
+  margin: 14px 4px 0;
+  color: #1d3c32;
+  font-size: 13px;
+}

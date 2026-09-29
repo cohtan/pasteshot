@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ページの画像</title>
+    <link rel="stylesheet" href="preview.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="titles">
+        <p class="eyebrow">ページ全体</p>
+        <h1 id="title">撮影しています</h1>
+        <p id="source"></p>
+      </div>
+      <div class="actions" id="actions" hidden>
+        <button id="copy" type="button">画像をコピー</button>
+        <a id="save" download>ダウンロード</a>
+      </div>
+    </header>
+    <p id="status" role="status">ページをスクロールしながら撮影しています。終わるまで、撮影中のタブは前面のままにしてください。</p>
+    <div id="notes"></div>
+    <main id="sheets"></main>
+    <script type="module" src="preview.js"></script>
+  </body>
+</html>

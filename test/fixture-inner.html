@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>pasteshot inner</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #ffffff; }
+      .app { display: flex; height: 100%; }
+      aside { width: 160px; flex: none; background: #663399; }
+      main { flex: 1; height: 100%; overflow: auto; background: #ffffff; }
+      .chunk { height: 360px; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside data-color="#663399">SIDE</aside>
+      <main id="scroller">
+        <div class="chunk" data-color="#c8d6e5" style="background:#c8d6e5">C0</div>
+        <div class="chunk" data-color="#f6d6c2" style="background:#f6d6c2">C1</div>
+        <div class="chunk" data-color="#d5e8d4" style="background:#d5e8d4">C2</div>
+        <div class="chunk" data-color="#e6d5f2" style="background:#e6d5f2">C3</div>
+        <div class="chunk" data-color="#f7e7a3" style="background:#f7e7a3">C4</div>
+        <div class="chunk" id="last" data-color="#ffcc00" style="background:#ffcc00">LAST</div>
+      </main>
+    </div>
+  </body>
+</html>

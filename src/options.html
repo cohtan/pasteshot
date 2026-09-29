@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>設定 — PasteShot</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">PasteShot</p>
+      <h1>設定</h1>
+      <form id="form">
+        <section class="panel" aria-labelledby="resolution-label">
+          <h2 id="resolution-label">解像度</h2>
+          <div class="choices" role="radiogroup" aria-labelledby="resolution-label">
+            <label class="choice">
+              <input type="radio" name="resolution" value="standard" checked />
+              <span>
+                <strong>標準</strong>
+                <small>横 1280px まで。チャットに貼りやすい大きさです。</small>
+              </span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="resolution" value="screen" />
+              <span>
+                <strong>画面どおり</strong>
+                <small>今見えている幅のままにします。</small>
+              </span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="resolution" value="sharp" />
+              <span>
+                <strong>高精細</strong>
+                <small>ディスプレイの画素を残します。Retina ではおよそ 2 倍です。</small>
+              </span>
+            </label>
+          </div>
+        </section>
+      </form>
+      <p id="saved" role="status"></p>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
