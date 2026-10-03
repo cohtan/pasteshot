@@ -1,4 +1,4 @@
-import { deleteTiles, pruneSessions, putSession, putTile, updateSession } from "./db.js";
+import { deleteTiles, failStaleSessions, pruneSessions, putSession, putTile, updateSession } from "./db.js";
 import { MAX_TILES, scrollStops } from "./geometry.js";
 import { getResolution } from "./settings.js";
 
@@ -7,6 +7,8 @@ let running = false;
 let lastCapture = 0;
 let injectedTabId = null;
 
+// The progress and preview pages hold a "keepalive" port so the worker is not
+// suspended mid-capture. The port needs a listener here to stay open.
 chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => {});
 });
@@ -260,6 +262,9 @@ async function runCapture(tab) {
   let result = { ok: false, sessionId: null, copied: false, imageCount: 0 };
 
   try {
+    // Nothing is running, so a session still marked as capturing was cut off
+    // when the worker stopped. Fail it so its window closes and its tiles go.
+    await failStaleSessions("撮影が途中で止まりました。もう一度試してください。");
     await pruneSessions(4);
     sessionId = crypto.randomUUID();
     result.sessionId = sessionId;
