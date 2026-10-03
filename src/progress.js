@@ -19,9 +19,9 @@ const steps = {
   copy: document.querySelector("#step-copy"),
 };
 
-const DONE_CLOSE_MS = 2800;
+const DONE_CLOSE_MS = 1000;
 const ERROR_CLOSE_MS = 6000;
-const CANCEL_CLOSE_MS = 1500;
+const CANCEL_CLOSE_MS = 1000;
 
 let rendered = "";
 let closing = false;
