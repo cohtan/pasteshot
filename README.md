@@ -23,6 +23,8 @@ Chrome 116 or later is required. Edge, Brave, and other Chromium browsers work t
 3. A small progress window opens and the page scrolls by itself while it is captured. Don't resize the window or switch tabs until it finishes.
 4. When it is done, the image is on the clipboard. Just paste it.
 
+To stop a capture partway, press Cancel in the progress window, click the PasteShot icon again, or close the progress window. The page goes back the way it was.
+
 If the image could not be copied automatically, a preview page opens where you can copy or save it by hand.
 
 If the page is long enough to be split into several images, only the first one is copied. Copy the rest with the buttons in the progress window.
