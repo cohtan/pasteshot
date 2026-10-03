@@ -14,8 +14,17 @@ const steps = {
   copy: document.querySelector("#step-copy"),
 };
 
+const DONE_CLOSE_MS = 2800;
+const ERROR_CLOSE_MS = 6000;
+
 let rendered = "";
 let closing = false;
+
+function closeLater(ms) {
+  if (closing) return;
+  closing = true;
+  window.setTimeout(() => window.close(), ms);
+}
 
 async function fitWindow(height) {
   try {
@@ -95,6 +104,7 @@ function render(session) {
     actionsEl.hidden = false;
     actionsEl.append(button("閉じる", () => window.close(), true));
     document.title = "撮影できませんでした";
+    closeLater(ERROR_CLOSE_MS);
     return;
   }
 
@@ -133,10 +143,7 @@ function render(session) {
       noteEl.hidden = false;
       noteEl.textContent = session.warnings[0];
     }
-    if (!closing) {
-      closing = true;
-      window.setTimeout(() => window.close(), 2800);
-    }
+    closeLater(DONE_CLOSE_MS);
     return;
   }
 
@@ -170,6 +177,7 @@ async function poll() {
     if (!sessionId) {
       titleEl.textContent = "撮影できませんでした";
       detailEl.textContent = "もう一度、ツールバーのボタンから試してください。";
+      closeLater(ERROR_CLOSE_MS);
       return;
     }
     const session = await getSession(sessionId);

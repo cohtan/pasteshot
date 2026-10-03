@@ -102,3 +102,16 @@ export async function pruneSessions(keep = 4) {
     next.close();
   }
 }
+
+export async function failStaleSessions(error) {
+  const db = await openDb();
+  const tx = db.transaction("sessions", "readonly");
+  const sessions = await requestDone(tx.objectStore("sessions").getAll());
+  await transactionDone(tx);
+  db.close();
+  for (const session of sessions) {
+    if (session.status !== "capturing") continue;
+    await updateSession(session.id, { status: "error", phase: "error", error });
+    await deleteTiles(session.id);
+  }
+}
