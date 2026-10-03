@@ -1,7 +1,10 @@
 import { deleteTiles, getSession, tilesFor, updateSession } from "./db.js";
 import { pageWidth } from "./geometry.js";
 import { copyPng, stitch } from "./stitch.js";
+import { localize, t } from "./i18n.js";
 import { resolutionById } from "./settings.js";
+
+localize();
 
 const params = new URLSearchParams(location.search);
 const sessionId = params.get("id");
@@ -66,7 +69,7 @@ function displayImages(session, built) {
   images = built;
   sheetsEl.replaceChildren();
   const many = built.length > 1;
-  copyButton.textContent = many ? "1枚目をコピー" : "画像をコピー";
+  copyButton.textContent = many ? t("copyNth", 1) : t("copyImage");
   actionsEl.hidden = false;
   const firstUrl = URL.createObjectURL(built[0].blob);
   saveLink.href = firstUrl;
@@ -78,9 +81,9 @@ function displayImages(session, built) {
     sheet.className = "sheet";
     const img = document.createElement("img");
     img.src = URL.createObjectURL(image.blob);
-    img.alt = many ? `${index + 1}枚目` : "ページ全体の画像";
+    img.alt = many ? t("imageAltNth", index + 1) : t("imageAltPage");
     img.tabIndex = 0;
-    img.title = "クリックでコピー";
+    img.title = t("clickToCopy");
     img.addEventListener("click", () => void copyImage(index));
     sheet.append(img);
     if (many) {
@@ -88,25 +91,25 @@ function displayImages(session, built) {
       caption.textContent = `${index + 1} / ${built.length}`;
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = `${index + 1}枚目をコピー`;
+      button.textContent = t("copyNth", index + 1);
       button.addEventListener("click", () => void copyImage(index));
       const link = document.createElement("a");
       link.className = "quiet";
       link.href = img.src;
       link.download = `${fileStem(session.title)}-${index + 1}.${extensionFor(image.type)}`;
-      link.textContent = "ダウンロード";
+      link.textContent = t("download");
       sheet.append(caption, button, link);
     }
     sheetsEl.append(sheet);
   });
 
   const notes = [...(session.warnings || [])];
-  if (built.length > 1) notes.push("ページが長いので複数の画像に分けています。上から順に貼ってください。");
+  if (built.length > 1) notes.push(t("noteSplit"));
   const preset = resolutionById(session.meta?.resolution);
-  if (preset.sharp) notes.push("高精細で書き出しています。画像は大きめです。");
-  else if (session.meta && pageWidth(session.meta) > preset.maxWidth) notes.push("チャットに貼りやすいよう、横幅を縮めています。");
+  if (preset.sharp) notes.push(t("noteSharp"));
+  else if (session.meta && pageWidth(session.meta) > preset.maxWidth) notes.push(t("noteShrunk"));
   showNotes(notes, "note");
-  setStatus(many ? "必要な画像をコピーして、チャット欄に貼り付けてください。" : "画像をコピーして、チャット欄に貼り付けてください。");
+  setStatus(many ? t("statusCopyMany") : t("statusCopyOne"));
   globalThis.__capture = {
     meta: session.meta,
     images: built.map((image) => ({ width: image.width, height: image.height, type: image.type })),
@@ -119,27 +122,26 @@ async function copyImage(index) {
   if (!image) return;
   try {
     await copyBlob(image.blob);
-    const which = images.length > 1 ? `${index + 1}枚目をコピーしました。` : "画像をコピーしました。";
-    setStatus(`${which}チャット欄に貼り付けてください。`);
+    setStatus(images.length > 1 ? t("copiedNthPaste", index + 1) : t("copiedImagePaste"));
   } catch (error) {
     console.error(error);
-    setStatus("コピーできませんでした。画像を右クリックしてコピーするか、ダウンロードしてください。");
+    setStatus(t("copyFailedManual"));
   }
 }
 
 async function present(session) {
-  titleEl.textContent = session.title || "ページの画像";
-  document.title = session.title ? `${session.title} — ページの画像` : "ページの画像";
+  titleEl.textContent = session.title || t("previewTitle");
+  document.title = session.title ? t("previewTitleWith", session.title) : t("previewTitle");
   renderSource(session);
   if (session.status === "error") {
-    setStatus(session.error || "撮影できませんでした。");
+    setStatus(session.error || t("previewCaptureFailed"));
     showNotes([], "note");
     return;
   }
   if (session.status === "capturing") {
-    const progress = session.total ? `（${session.current} / ${session.total}）` : session.current ? `（${session.current}）` : "";
-    titleEl.textContent = "撮影しています";
-    setStatus(`ページをスクロールしながら撮影しています${progress}。終わるまで、撮影中のタブは前面のままにしてください。`);
+    const progress = session.total ? `${session.current} / ${session.total}` : session.current ? String(session.current) : "";
+    titleEl.textContent = t("previewCapturing");
+    setStatus(progress ? t("previewCapturingStatusAt", progress) : t("previewCapturingStatus"));
     return;
   }
   if (session.status !== "ready" || started) return;
@@ -158,19 +160,19 @@ async function present(session) {
   } catch (error) {
     console.error(error);
     started = false;
-    setStatus("画像の組み立てに失敗しました。もう一度撮影してください。");
+    setStatus(t("assembleFailed"));
   }
 }
 
 async function poll() {
   if (!sessionId) {
-    titleEl.textContent = "ページの画像";
-    setStatus("ツールバーのボタンから、見ているページを撮影できます。");
+    titleEl.textContent = t("previewTitle");
+    setStatus(t("previewIdle"));
     return;
   }
   const session = await getSession(sessionId);
   if (!session) {
-    setStatus("撮影データが見つかりません。もう一度撮影してください。");
+    setStatus(t("sessionMissing"));
     return;
   }
   await present(session);

@@ -1,38 +1,38 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>設定 — PasteShot</title>
+    <title data-i18n="optionsTitle">Settings — PasteShot</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
     <main>
       <p class="eyebrow">PasteShot</p>
-      <h1>設定</h1>
+      <h1 data-i18n="settings">Settings</h1>
       <form id="form">
         <section class="panel" aria-labelledby="resolution-label">
-          <h2 id="resolution-label">解像度</h2>
+          <h2 id="resolution-label" data-i18n="resolution">Resolution</h2>
           <div class="choices" role="radiogroup" aria-labelledby="resolution-label">
             <label class="choice">
               <input type="radio" name="resolution" value="standard" checked />
               <span>
-                <strong>標準</strong>
-                <small>横 1280px まで。チャットに貼りやすい大きさです。</small>
+                <strong data-i18n="resStandard">Standard</strong>
+                <small data-i18n="resStandardHint">Up to 1280px wide. A good size for pasting into chat.</small>
               </span>
             </label>
             <label class="choice">
               <input type="radio" name="resolution" value="screen" />
               <span>
-                <strong>画面どおり</strong>
-                <small>今見えている幅のままにします。</small>
+                <strong data-i18n="resScreen">As on screen</strong>
+                <small data-i18n="resScreenHint">Keeps the width you see now.</small>
               </span>
             </label>
             <label class="choice">
               <input type="radio" name="resolution" value="sharp" />
               <span>
-                <strong>高精細</strong>
-                <small>ディスプレイの画素を残します。Retina ではおよそ 2 倍です。</small>
+                <strong data-i18n="resSharp">High resolution</strong>
+                <small data-i18n="resSharpHint">Keeps the display's pixels. About twice the size on Retina screens.</small>
               </span>
             </label>
           </div>

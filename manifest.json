@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "PasteShot",
-  "short_name": "PasteShot",
+  "name": "__MSG_extName__",
+  "short_name": "__MSG_extName__",
+  "default_locale": "en",
   "version": "0.3.0",
-  "description": "見ているページ全体を、スクロール分も含めて1枚の画像にします。",
+  "description": "__MSG_extDescription__",
   "minimum_chrome_version": "116",
   "permissions": ["activeTab", "scripting", "clipboardWrite", "offscreen", "storage"],
   "options_ui": {
@@ -11,7 +12,7 @@
     "open_in_tab": true
   },
   "action": {
-    "default_title": "ページ全体を画像にする",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "icons/16.png",
       "32": "icons/32.png",

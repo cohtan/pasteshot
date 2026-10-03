@@ -1,0 +1,206 @@
+{
+  "extName": {
+    "message": "PasteShot"
+  },
+  "extDescription": {
+    "message": "Turns the whole page you are viewing, including the part you scroll to, into one image."
+  },
+  "actionTitle": {
+    "message": "Capture the whole page"
+  },
+  "actionTitleBusy": {
+    "message": "Capturing $1"
+  },
+  "offscreenJustification": {
+    "message": "Combines the captured page into one image and copies it to the clipboard."
+  },
+  "errResize": {
+    "message": "The window was resized during capture, so it stopped. Please try again."
+  },
+  "errRestricted": {
+    "message": "The browser does not allow capturing this page."
+  },
+  "errGeneric": {
+    "message": "Could not capture the page. Reload it and try again."
+  },
+  "errStalled": {
+    "message": "The capture stopped partway. Please try again."
+  },
+  "warnTruncatedY": {
+    "message": "The page is very long, so the bottom is cut off."
+  },
+  "warnTruncatedX": {
+    "message": "Content that overflows sideways is not included."
+  },
+  "warnBlocked": {
+    "message": "The page stopped scrolling partway, so the image ends there."
+  },
+  "warnElement": {
+    "message": "The scrolling area inside the page was unrolled, rather than the whole window."
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "copyImage": {
+    "message": "Copy image"
+  },
+  "copyNth": {
+    "message": "Copy image $1"
+  },
+  "download": {
+    "message": "Download"
+  },
+  "tryAgain": {
+    "message": "Please try again."
+  },
+  "stepStart": {
+    "message": "Start"
+  },
+  "stepScroll": {
+    "message": "Capture"
+  },
+  "stepCopy": {
+    "message": "Copy"
+  },
+  "progStartTitle": {
+    "message": "Starting capture"
+  },
+  "progStartDetail": {
+    "message": "Leave the page as it is."
+  },
+  "progScrollTitle": {
+    "message": "Scrolling"
+  },
+  "progCopyTitle": {
+    "message": "Copying"
+  },
+  "progCopyDetail": {
+    "message": "Combining the screenshots into one image."
+  },
+  "progDoneTitle": {
+    "message": "Copied"
+  },
+  "progDoneDetail": {
+    "message": "Paste it into your chat."
+  },
+  "progMultiTitle": {
+    "message": "Copied image 1"
+  },
+  "progMultiDetail": {
+    "message": "The page was split into $1 images. Copy the rest with the buttons."
+  },
+  "progManualTitle": {
+    "message": "Press the copy button"
+  },
+  "progManualDetail": {
+    "message": "The image could not be copied automatically."
+  },
+  "progCopyRetry": {
+    "message": "Could not copy. Press the button again."
+  },
+  "progErrorTitle": {
+    "message": "Capture failed"
+  },
+  "progNoSession": {
+    "message": "Try again from the toolbar button."
+  },
+  "copiedPaste": {
+    "message": "Copied. Paste it into your chat."
+  },
+  "copiedNthPaste": {
+    "message": "Copied image $1. Paste it into your chat."
+  },
+  "copiedImagePaste": {
+    "message": "Copied the image. Paste it into your chat."
+  },
+  "previewTitle": {
+    "message": "Page image"
+  },
+  "previewTitleWith": {
+    "message": "$1 — Page image"
+  },
+  "previewEyebrow": {
+    "message": "Full page"
+  },
+  "previewCapturing": {
+    "message": "Capturing"
+  },
+  "previewCapturingStatus": {
+    "message": "Scrolling and capturing the page. Keep that tab in front until it finishes."
+  },
+  "previewCapturingStatusAt": {
+    "message": "Scrolling and capturing the page ($1). Keep that tab in front until it finishes."
+  },
+  "imageAltNth": {
+    "message": "Image $1"
+  },
+  "imageAltPage": {
+    "message": "Full-page image"
+  },
+  "clickToCopy": {
+    "message": "Click to copy"
+  },
+  "noteSplit": {
+    "message": "The page is long, so it was split into several images. Paste them from the top down."
+  },
+  "noteSharp": {
+    "message": "Exported at high resolution, so the image is large."
+  },
+  "noteShrunk": {
+    "message": "The width was reduced so the image is easy to paste into chat."
+  },
+  "statusCopyMany": {
+    "message": "Copy the images you need and paste them into your chat."
+  },
+  "statusCopyOne": {
+    "message": "Copy the image and paste it into your chat."
+  },
+  "copyFailedManual": {
+    "message": "Could not copy. Right-click the image to copy it, or download it."
+  },
+  "previewCaptureFailed": {
+    "message": "Capture failed."
+  },
+  "assembleFailed": {
+    "message": "Could not assemble the image. Please capture again."
+  },
+  "previewIdle": {
+    "message": "Use the toolbar button to capture the page you are viewing."
+  },
+  "sessionMissing": {
+    "message": "The capture data was not found. Please capture again."
+  },
+  "optionsTitle": {
+    "message": "Settings — PasteShot"
+  },
+  "resolution": {
+    "message": "Resolution"
+  },
+  "resStandard": {
+    "message": "Standard"
+  },
+  "resStandardHint": {
+    "message": "Up to 1280px wide. A good size for pasting into chat."
+  },
+  "resScreen": {
+    "message": "As on screen"
+  },
+  "resScreenHint": {
+    "message": "Keeps the width you see now."
+  },
+  "resSharp": {
+    "message": "High resolution"
+  },
+  "resSharpHint": {
+    "message": "Keeps the display's pixels. About twice the size on Retina screens."
+  },
+  "savedOk": {
+    "message": "Saved. It applies from the next capture."
+  },
+  "saveFailed": {
+    "message": "Could not save. Please choose again."
+  }
+}

@@ -1,5 +1,6 @@
 import { deleteTiles, failStaleSessions, pruneSessions, putSession, putTile, updateSession } from "./db.js";
 import { MAX_TILES, scrollStops } from "./geometry.js";
+import { t } from "./i18n.js";
 import { getResolution } from "./settings.js";
 
 const CAPTURE_INTERVAL_MS = 520;
@@ -36,12 +37,12 @@ function isCapturable(url = "") {
 function humanError(error) {
   const message = String(error?.message || error);
   if (error?.code === "resize" || message === "resize") {
-    return "撮影中にウィンドウの大きさが変わったので中断しました。もう一度試してください。";
+    return t("errResize");
   }
   if (/Cannot access contents|gallery|chrome:\/\/|edge:\/\/|about:|restricted/i.test(message)) {
-    return "このページはブラウザの制限で撮影できません。";
+    return t("errRestricted");
   }
-  return "撮影できませんでした。ページを開き直して、もう一度試してください。";
+  return t("errGeneric");
 }
 
 async function setBadge(text) {
@@ -127,7 +128,7 @@ async function callOffscreen(sessionId) {
     await chrome.offscreen.createDocument({
       url: "src/offscreen.html",
       reasons: ["CLIPBOARD", "BLOBS"],
-      justification: "撮影したページを1枚の画像にまとめて、クリップボードへコピーします。",
+      justification: t("offscreenJustification"),
     });
   }
   let lastError = null;
@@ -170,7 +171,7 @@ async function shoot(tabId, windowId, meta, sessionId) {
   const report = async () => {
     const total = Math.min(MAX_TILES, Math.max(tiles.length, xStops.length * scrollStops(contentH, viewH).length));
     await setBadge(String(tiles.length));
-    await chrome.action.setTitle({ title: `撮影中 ${tiles.length}` });
+    await chrome.action.setTitle({ title: t("actionTitleBusy", tiles.length) });
     await updateSession(sessionId, { phase: "scroll", current: tiles.length, total });
   };
 
@@ -238,11 +239,11 @@ async function shoot(tabId, windowId, meta, sessionId) {
   const maxY = Math.max(...tiles.map((tile) => tile.y));
   const maxX = Math.max(...tiles.map((tile) => tile.x));
   const warnings = [];
-  if (truncatedY) warnings.push("ページが長いので、下の方は途中までです。");
-  if (truncatedX) warnings.push("横にはみ出した部分は含めていません。");
-  if (blocked) warnings.push("途中からスクロールできなくなったので、そこまでを画像にしています。");
+  if (truncatedY) warnings.push(t("warnTruncatedY"));
+  if (truncatedX) warnings.push(t("warnTruncatedX"));
+  if (blocked) warnings.push(t("warnBlocked"));
   if (meta.mode === "element") {
-    warnings.push("画面全体ではなく、中でスクロールしている領域を展開しています。");
+    warnings.push(t("warnElement"));
   }
 
   return {
@@ -264,7 +265,7 @@ async function runCapture(tab) {
   try {
     // Nothing is running, so a session still marked as capturing was cut off
     // when the worker stopped. Fail it so its window closes and its tiles go.
-    await failStaleSessions("撮影が途中で止まりました。もう一度試してください。");
+    await failStaleSessions(t("errStalled"));
     await pruneSessions(4);
     sessionId = crypto.randomUUID();
     result.sessionId = sessionId;
@@ -279,7 +280,7 @@ async function runCapture(tab) {
       current: 0,
       total: null,
       warnings: [],
-      error: capturable ? null : "このページはブラウザの制限で撮影できません。",
+      error: capturable ? null : t("errRestricted"),
       meta: null,
       images: null,
       copied: false,
@@ -290,7 +291,7 @@ async function runCapture(tab) {
       return null;
     });
     if (!capturable) {
-      result.error = "このページはブラウザの制限で撮影できません。";
+      result.error = t("errRestricted");
       return result;
     }
 
@@ -355,7 +356,7 @@ async function runCapture(tab) {
       injectedTabId = null;
     }
     await setBadge("");
-    await chrome.action.setTitle({ title: "ページ全体を画像にする" }).catch(() => {});
+    await chrome.action.setTitle({ title: t("actionTitle") }).catch(() => {});
     await chrome.offscreen.closeDocument().catch(() => {});
     running = false;
   }

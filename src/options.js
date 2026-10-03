@@ -1,4 +1,7 @@
+import { localize, t } from "./i18n.js";
 import { getResolution, setResolution } from "./settings.js";
+
+localize();
 
 const form = document.querySelector("#form");
 const saved = document.querySelector("#saved");
@@ -14,10 +17,10 @@ form.addEventListener("change", async () => {
   saving = true;
   try {
     await setResolution(chosen.value);
-    saved.textContent = "保存しました。次の撮影から使います。";
+    saved.textContent = t("savedOk");
   } catch (error) {
     console.error(error);
-    saved.textContent = "保存できませんでした。もう一度選んでください。";
+    saved.textContent = t("saveFailed");
   } finally {
     saving = false;
   }

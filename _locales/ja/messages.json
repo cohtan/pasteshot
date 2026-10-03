@@ -1,0 +1,206 @@
+{
+  "extName": {
+    "message": "PasteShot"
+  },
+  "extDescription": {
+    "message": "見ているページ全体を、スクロール分も含めて1枚の画像にします。"
+  },
+  "actionTitle": {
+    "message": "ページ全体を画像にする"
+  },
+  "actionTitleBusy": {
+    "message": "撮影中 $1"
+  },
+  "offscreenJustification": {
+    "message": "撮影したページを1枚の画像にまとめて、クリップボードへコピーします。"
+  },
+  "errResize": {
+    "message": "撮影中にウィンドウの大きさが変わったので中断しました。もう一度試してください。"
+  },
+  "errRestricted": {
+    "message": "このページはブラウザの制限で撮影できません。"
+  },
+  "errGeneric": {
+    "message": "撮影できませんでした。ページを開き直して、もう一度試してください。"
+  },
+  "errStalled": {
+    "message": "撮影が途中で止まりました。もう一度試してください。"
+  },
+  "warnTruncatedY": {
+    "message": "ページが長いので、下の方は途中までです。"
+  },
+  "warnTruncatedX": {
+    "message": "横にはみ出した部分は含めていません。"
+  },
+  "warnBlocked": {
+    "message": "途中からスクロールできなくなったので、そこまでを画像にしています。"
+  },
+  "warnElement": {
+    "message": "画面全体ではなく、中でスクロールしている領域を展開しています。"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "close": {
+    "message": "閉じる"
+  },
+  "copyImage": {
+    "message": "画像をコピー"
+  },
+  "copyNth": {
+    "message": "$1枚目をコピー"
+  },
+  "download": {
+    "message": "ダウンロード"
+  },
+  "tryAgain": {
+    "message": "もう一度試してください。"
+  },
+  "stepStart": {
+    "message": "開始"
+  },
+  "stepScroll": {
+    "message": "撮影"
+  },
+  "stepCopy": {
+    "message": "コピー"
+  },
+  "progStartTitle": {
+    "message": "撮影を始めています"
+  },
+  "progStartDetail": {
+    "message": "ページはそのままにしてください。"
+  },
+  "progScrollTitle": {
+    "message": "スクロールしています"
+  },
+  "progCopyTitle": {
+    "message": "コピーしています"
+  },
+  "progCopyDetail": {
+    "message": "画像をひとつにまとめています。"
+  },
+  "progDoneTitle": {
+    "message": "コピーしました"
+  },
+  "progDoneDetail": {
+    "message": "チャット欄に貼り付けてください。"
+  },
+  "progMultiTitle": {
+    "message": "1枚目をコピーしました"
+  },
+  "progMultiDetail": {
+    "message": "$1枚に分かれているので、続きはボタンからコピーしてください。"
+  },
+  "progManualTitle": {
+    "message": "コピーボタンを押してください"
+  },
+  "progManualDetail": {
+    "message": "自動ではコピーできませんでした。"
+  },
+  "progCopyRetry": {
+    "message": "コピーできませんでした。もう一度押してください。"
+  },
+  "progErrorTitle": {
+    "message": "撮影できませんでした"
+  },
+  "progNoSession": {
+    "message": "もう一度、ツールバーのボタンから試してください。"
+  },
+  "copiedPaste": {
+    "message": "コピーしました。チャット欄に貼り付けてください。"
+  },
+  "copiedNthPaste": {
+    "message": "$1枚目をコピーしました。チャット欄に貼り付けてください。"
+  },
+  "copiedImagePaste": {
+    "message": "画像をコピーしました。チャット欄に貼り付けてください。"
+  },
+  "previewTitle": {
+    "message": "ページの画像"
+  },
+  "previewTitleWith": {
+    "message": "$1 — ページの画像"
+  },
+  "previewEyebrow": {
+    "message": "ページ全体"
+  },
+  "previewCapturing": {
+    "message": "撮影しています"
+  },
+  "previewCapturingStatus": {
+    "message": "ページをスクロールしながら撮影しています。終わるまで、撮影中のタブは前面のままにしてください。"
+  },
+  "previewCapturingStatusAt": {
+    "message": "ページをスクロールしながら撮影しています（$1）。終わるまで、撮影中のタブは前面のままにしてください。"
+  },
+  "imageAltNth": {
+    "message": "$1枚目"
+  },
+  "imageAltPage": {
+    "message": "ページ全体の画像"
+  },
+  "clickToCopy": {
+    "message": "クリックでコピー"
+  },
+  "noteSplit": {
+    "message": "ページが長いので複数の画像に分けています。上から順に貼ってください。"
+  },
+  "noteSharp": {
+    "message": "高精細で書き出しています。画像は大きめです。"
+  },
+  "noteShrunk": {
+    "message": "チャットに貼りやすいよう、横幅を縮めています。"
+  },
+  "statusCopyMany": {
+    "message": "必要な画像をコピーして、チャット欄に貼り付けてください。"
+  },
+  "statusCopyOne": {
+    "message": "画像をコピーして、チャット欄に貼り付けてください。"
+  },
+  "copyFailedManual": {
+    "message": "コピーできませんでした。画像を右クリックしてコピーするか、ダウンロードしてください。"
+  },
+  "previewCaptureFailed": {
+    "message": "撮影できませんでした。"
+  },
+  "assembleFailed": {
+    "message": "画像の組み立てに失敗しました。もう一度撮影してください。"
+  },
+  "previewIdle": {
+    "message": "ツールバーのボタンから、見ているページを撮影できます。"
+  },
+  "sessionMissing": {
+    "message": "撮影データが見つかりません。もう一度撮影してください。"
+  },
+  "optionsTitle": {
+    "message": "設定 — PasteShot"
+  },
+  "resolution": {
+    "message": "解像度"
+  },
+  "resStandard": {
+    "message": "標準"
+  },
+  "resStandardHint": {
+    "message": "横 1280px まで。チャットに貼りやすい大きさです。"
+  },
+  "resScreen": {
+    "message": "画面どおり"
+  },
+  "resScreenHint": {
+    "message": "今見えている幅のままにします。"
+  },
+  "resSharp": {
+    "message": "高精細"
+  },
+  "resSharpHint": {
+    "message": "ディスプレイの画素を残します。Retina ではおよそ 2 倍です。"
+  },
+  "savedOk": {
+    "message": "保存しました。次の撮影から使います。"
+  },
+  "saveFailed": {
+    "message": "保存できませんでした。もう一度選んでください。"
+  }
+}

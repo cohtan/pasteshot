@@ -417,6 +417,7 @@ async function main() {
   const extensionDir = await mkdtemp(path.join(tmpdir(), "pasteshot-ext-"));
   await cp(path.join(root, "src"), path.join(extensionDir, "src"), { recursive: true });
   await cp(path.join(root, "icons"), path.join(extensionDir, "icons"), { recursive: true });
+  await cp(path.join(root, "_locales"), path.join(extensionDir, "_locales"), { recursive: true });
   const manifest = JSON.parse(await readFile(path.join(root, "manifest.json"), "utf8"));
   manifest.host_permissions = ["<all_urls>"];
   // captureVisibleTab accepts <all_urls> or a real toolbar click. The test

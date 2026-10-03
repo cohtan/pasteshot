@@ -1,88 +1,93 @@
 # PasteShot
 
-見ているページ全体を、スクロール分も含めて1枚の画像にして、クリップボードにコピーする Chrome 拡張です。撮ったらそのままチャットやドキュメントに貼り付けられます。
+English | [日本語](README.ja.md)
 
-## インストール
+A Chrome extension that turns the whole page you are viewing, including the part you have to scroll to, into one image and copies it to the clipboard. Paste it straight into a chat or a document.
 
-Chrome ウェブストアには公開していません。次の手順で読み込みます。
+## Install
 
-1. このリポジトリを clone するか、「Code → Download ZIP」で取得して展開します。
-2. Chrome で `chrome://extensions` を開きます。
-3. 右上の「デベロッパー モード」をオンにします。
-4. 「パッケージ化されていない拡張機能を読み込む」を押し、展開したフォルダ(`manifest.json` があるフォルダ)を選びます。
-5. ツールバーのパズルのアイコンから、PasteShot をピン留めしておくと便利です。
+PasteShot is not on the Chrome Web Store. Load it like this:
 
-Chrome 116 以上が必要です。Edge や Brave など Chromium 系のブラウザでも、同じ手順で入ります。
+1. Clone this repository, or use "Code → Download ZIP" and unzip it.
+2. Open `chrome://extensions` in Chrome.
+3. Turn on "Developer mode" in the top right.
+4. Click "Load unpacked" and pick the unzipped folder (the one that contains `manifest.json`).
+5. Pin PasteShot from the puzzle-piece icon in the toolbar so it is easy to reach.
 
-## 使い方
+Chrome 116 or later is required. Edge, Brave, and other Chromium browsers work the same way.
 
-1. 撮りたいページを開きます。
-2. ツールバーの PasteShot のアイコンを押します。
-3. 小さな進捗ウィンドウが開き、ページが自動でスクロールしながら撮影されます。撮影中は、ウィンドウの大きさを変えたりタブを切り替えたりしないでください。
-4. 終わると画像がクリップボードにコピーされます。あとは貼り付けるだけです。
+## Use
 
-自動でコピーできなかった場合は、プレビュー画面が開きます。そこから手動でコピーや保存ができます。
+1. Open the page you want to capture.
+2. Click the PasteShot icon in the toolbar.
+3. A small progress window opens and the page scrolls by itself while it is captured. Don't resize the window or switch tabs until it finishes.
+4. When it is done, the image is on the clipboard. Just paste it.
 
-ページが長くて画像が複数枚に分かれたときは、最初の1枚だけがコピーされます。残りは進捗ウィンドウのボタンからコピーできます。
+If the image could not be copied automatically, a preview page opens where you can copy or save it by hand.
 
-## 設定
+If the page is long enough to be split into several images, only the first one is copied. Copy the rest with the buttons in the progress window.
 
-拡張機能のオプションページで、解像度を選べます。
+The screens follow the browser's language: Japanese for Japanese, English otherwise.
 
-| 設定 | 内容 |
+## Settings
+
+Choose the resolution on the extension's options page.
+
+| Setting | What it does |
 |---|---|
-| 標準(初期値) | 横 1280px まで。チャットに貼りやすい大きさです。 |
-| 画面どおり | 今見えている幅のままにします。 |
-| 高精細 | ディスプレイの画素を残します。Retina ではおよそ 2 倍になり、画像は大きくなります。 |
+| Standard (default) | Up to 1280px wide. A good size for pasting into chat. |
+| As on screen | Keeps the width you see now. |
+| High resolution | Keeps the display's pixels. About twice the size on Retina screens, so images are larger. |
 
-## 制限事項
+## Limitations
 
-- `http(s)://` と `file://` のページだけが対象です。`chrome://` のページや Chrome ウェブストアなどは、ブラウザの制限で撮れません。
-- `file://` のページを撮るには、拡張機能の詳細で「ファイルの URL へのアクセスを許可する」をオンにしてください。
-- 撮影は最大24枚分の画面までです。それより長いページは、下の方が途中までになります。
-- 横にはみ出した部分は、縦横のタイルが多くなる場合は含めません。
-- 撮影の途中でスクロールできなくなったときは、そこまでを画像にします。
-- 撮影中にウィンドウの大きさが変わると、中断します。
-- Chrome の制限で、撮影には約0.5秒の間隔が必要です。長いページはそのぶん時間がかかります。
-- 画像が 7200px より高くなるときは、複数枚に分けます。
-- 動画やアニメーション、ページの途中で読み込まれる内容は、撮影の瞬間の見た目になります。
+- Only `http(s)://` and `file://` pages can be captured. The browser does not allow capturing `chrome://` pages, the Chrome Web Store, and similar pages.
+- To capture `file://` pages, turn on "Allow access to file URLs" in the extension's details.
+- A capture covers at most 24 screens. On longer pages the bottom is cut off.
+- Content that overflows sideways is left out when it would need too many tiles.
+- If the page stops scrolling partway, the image ends there.
+- If the window is resized during capture, the capture stops.
+- Chrome needs about 0.5 seconds between screenshots, so long pages take longer.
+- Images taller than 7200px are split into several images.
+- Videos, animations, and content that loads partway down the page appear as they looked at the moment of capture.
 
-## プライバシー
+## Privacy
 
-撮影した画像は、すべて端末の中で処理します。外部のサーバーには何も送りません。設定(解像度)だけは、Chrome の同期機能でブラウザ間に保存されます。
+Everything is processed on your device. Nothing is sent to any server. Only the resolution setting is saved through Chrome sync so it follows you across browsers.
 
-直近4回分の撮影結果(画像、ページのタイトルと URL)は、プレビュー画面で開き直せるよう拡張機能の中(IndexedDB)に残ります。5回目の撮影を始めると、古いものから消えます。拡張機能を削除すると、すべて消えます。
+The last 4 captures (the images, page titles, and URLs) are kept inside the extension (IndexedDB) so the preview page can reopen them. Starting a 5th capture removes the oldest. Removing the extension deletes all of them.
 
-使っている権限:
+Permissions used:
 
-- `activeTab`, `scripting`: 押したときに、そのタブを撮影するため
-- `clipboardWrite`: 画像をクリップボードにコピーするため
-- `offscreen`: 撮った画像をつなぎ合わせて、コピーするため
-- `storage`: 解像度の設定を保存するため
+- `activeTab`, `scripting`: to capture the tab when you click the icon
+- `clipboardWrite`: to copy the image to the clipboard
+- `offscreen`: to stitch the screenshots together and copy the result
+- `storage`: to save the resolution setting
 
-## 開発
+## Development
 
-ビルドは不要です。ソースをそのまま読み込めます。
+There is no build step. The source loads as is.
 
 ```sh
 pnpm test
 ```
 
-`test/capture.mjs` は、実際のブラウザで撮影を確かめるためのスクリプトです。
+`test/capture.mjs` checks a real capture in a real browser.
 
-## 構成
+## Layout
 
-| ファイル | 役割 |
+| File | Role |
 |---|---|
-| `src/background.js` | 全体の制御(service worker) |
-| `src/page-hook.js` | ページ内で動く準備、スクロール、復元 |
-| `src/geometry.js` | タイルの配置と出力の分割 |
-| `src/stitch.js`, `src/offscreen.*` | 画像の合成とコピー |
-| `src/settings.js` | 解像度の設定の読み書き |
-| `src/db.js` | 撮影データの保存(IndexedDB) |
-| `src/progress.*`, `src/preview.*`, `src/options.*` | 各画面 |
-| `tools/make-icons.py` | アイコンの生成(`python3 tools/make-icons.py`、Pillow が必要) |
+| `src/background.js` | Overall control (service worker) |
+| `src/page-hook.js` | Preparing, scrolling, and restoring the page |
+| `src/geometry.js` | Tile placement and splitting the output |
+| `src/stitch.js`, `src/offscreen.*` | Stitching the image and copying it |
+| `src/settings.js` | Reading and writing the resolution setting |
+| `src/db.js` | Storing capture data (IndexedDB) |
+| `src/progress.*`, `src/preview.*`, `src/options.*` | The screens |
+| `src/i18n.js`, `_locales/` | Screen text (Japanese and English, picked by the browser language) |
+| `tools/make-icons.py` | Generates the icons (`python3 tools/make-icons.py`, needs Pillow) |
 
-## ライセンス
+## License
 
 [MIT](LICENSE)

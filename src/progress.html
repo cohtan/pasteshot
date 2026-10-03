@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,15 +9,15 @@
   <body>
     <div class="top">
       <p class="eyebrow">PasteShot</p>
-      <button id="settings" type="button" class="link">設定</button>
+      <button id="settings" type="button" class="link" data-i18n="settings">Settings</button>
     </div>
-    <h1 id="title">撮影を始めています</h1>
+    <h1 id="title" data-i18n="progStartTitle">Starting capture</h1>
     <ol class="steps" id="steps">
-      <li id="step-start">開始</li>
-      <li id="step-scroll">撮影</li>
-      <li id="step-copy">コピー</li>
+      <li id="step-start" data-i18n="stepStart">Start</li>
+      <li id="step-scroll" data-i18n="stepScroll">Capture</li>
+      <li id="step-copy" data-i18n="stepCopy">Copy</li>
     </ol>
-    <p id="detail" role="status">ページはそのままにしてください。</p>
+    <p id="detail" role="status" data-i18n="progStartDetail">Leave the page as it is.</p>
     <div class="track" id="track" hidden>
       <div id="bar"></div>
     </div>

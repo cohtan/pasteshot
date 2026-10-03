@@ -1,5 +1,8 @@
 import { getSession } from "./db.js";
+import { localize, t } from "./i18n.js";
 import { copyPng } from "./stitch.js";
+
+localize();
 
 const sessionId = new URLSearchParams(location.search).get("id");
 const titleEl = document.querySelector("#title");
@@ -70,8 +73,8 @@ async function copyStored(index) {
   if (!image) throw new Error("missing image");
   await copyPng(image.blob);
   detailEl.textContent = session.images.length > 1
-    ? `${index + 1}枚目をコピーしました。チャット欄に貼り付けてください。`
-    : "コピーしました。チャット欄に貼り付けてください。";
+    ? t("copiedNthPaste", index + 1)
+    : t("copiedPaste");
 }
 
 function render(session) {
@@ -99,46 +102,46 @@ function render(session) {
 
   if (phase === "error" || session.status === "error") {
     markSteps("start");
-    titleEl.textContent = "撮影できませんでした";
-    detailEl.textContent = session.error || "もう一度試してください。";
+    titleEl.textContent = t("progErrorTitle");
+    detailEl.textContent = session.error || t("tryAgain");
     actionsEl.hidden = false;
-    actionsEl.append(button("閉じる", () => window.close(), true));
-    document.title = "撮影できませんでした";
+    actionsEl.append(button(t("close"), () => window.close(), true));
+    document.title = t("progErrorTitle");
     closeLater(ERROR_CLOSE_MS);
     return;
   }
 
   if (phase === "manual") {
     markSteps("copy");
-    titleEl.textContent = "コピーボタンを押してください";
-    detailEl.textContent = "自動ではコピーできませんでした。";
+    titleEl.textContent = t("progManualTitle");
+    detailEl.textContent = t("progManualDetail");
     actionsEl.hidden = false;
-    actionsEl.append(button("画像をコピー", () => void copyStored(0).catch(() => {
-      detailEl.textContent = "コピーできませんでした。もう一度押してください。";
+    actionsEl.append(button(t("copyImage"), () => void copyStored(0).catch(() => {
+      detailEl.textContent = t("progCopyRetry");
     })));
-    document.title = "コピーボタンを押してください";
+    document.title = t("progManualTitle");
     return;
   }
 
   if (phase === "multi") {
     markSteps("done");
-    titleEl.textContent = "1枚目をコピーしました";
-    detailEl.textContent = `${count}枚に分かれているので、続きはボタンからコピーしてください。`;
+    titleEl.textContent = t("progMultiTitle");
+    detailEl.textContent = t("progMultiDetail", count);
     actionsEl.hidden = false;
     for (let index = 1; index < count; index += 1) {
-      const label = `${index + 1}枚目をコピー`;
+      const label = t("copyNth", index + 1);
       actionsEl.append(button(label, () => void copyStored(index)));
     }
-    actionsEl.append(button("閉じる", () => window.close(), true));
-    document.title = "1枚目をコピーしました";
+    actionsEl.append(button(t("close"), () => window.close(), true));
+    document.title = t("progMultiTitle");
     return;
   }
 
   if (phase === "done") {
     markSteps("done");
-    titleEl.textContent = "コピーしました";
-    detailEl.textContent = "チャット欄に貼り付けてください。";
-    document.title = "コピーしました";
+    titleEl.textContent = t("progDoneTitle");
+    detailEl.textContent = t("progDoneDetail");
+    document.title = t("progDoneTitle");
     if (session.warnings?.length) {
       noteEl.hidden = false;
       noteEl.textContent = session.warnings[0];
@@ -149,34 +152,34 @@ function render(session) {
 
   if (phase === "copy") {
     markSteps("copy");
-    titleEl.textContent = "コピーしています";
-    detailEl.textContent = "画像をひとつにまとめています。";
-    document.title = "コピーしています";
+    titleEl.textContent = t("progCopyTitle");
+    detailEl.textContent = t("progCopyDetail");
+    document.title = t("progCopyTitle");
     return;
   }
 
   if (phase === "scroll") {
     markSteps("scroll");
-    titleEl.textContent = "スクロールしています";
+    titleEl.textContent = t("progScrollTitle");
     const progress = session.total ? `${session.current} / ${session.total}` : `${session.current || 0}`;
     detailEl.textContent = progress;
     const ratio = session.total ? Math.min(1, session.current / session.total) : 0;
     barEl.style.width = `${Math.round(ratio * 100)}%`;
-    document.title = `撮影中 ${progress}`;
+    document.title = t("actionTitleBusy", progress);
     return;
   }
 
   markSteps("start");
-  titleEl.textContent = "撮影を始めています";
-  detailEl.textContent = "ページはそのままにしてください。";
-  document.title = "撮影を始めています";
+  titleEl.textContent = t("progStartTitle");
+  detailEl.textContent = t("progStartDetail");
+  document.title = t("progStartTitle");
 }
 
 async function poll() {
   try {
     if (!sessionId) {
-      titleEl.textContent = "撮影できませんでした";
-      detailEl.textContent = "もう一度、ツールバーのボタンから試してください。";
+      titleEl.textContent = t("progErrorTitle");
+      detailEl.textContent = t("progNoSession");
       closeLater(ERROR_CLOSE_MS);
       return;
     }
