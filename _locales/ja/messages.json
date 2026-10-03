@@ -202,5 +202,23 @@
   },
   "saveFailed": {
     "message": "保存できませんでした。もう一度選んでください。"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "actionTitleBusyCancel": {
+    "message": "撮影中 $1 — もう一度押すとキャンセル"
+  },
+  "progCancelling": {
+    "message": "キャンセルしています…"
+  },
+  "progCancelledTitle": {
+    "message": "キャンセルしました"
+  },
+  "progCancelledDetail": {
+    "message": "ページは元の状態に戻しました。"
+  },
+  "previewCancelled": {
+    "message": "撮影はキャンセルされました。"
   }
 }

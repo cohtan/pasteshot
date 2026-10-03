@@ -7,6 +7,8 @@ const CAPTURE_INTERVAL_MS = 520;
 let running = false;
 let lastCapture = 0;
 let injectedTabId = null;
+// The capture in progress: { sessionId, progressWindowId, cancellable, cancelled }.
+let active = null;
 
 // The progress and preview pages hold a "keepalive" port so the worker is not
 // suspended mid-capture. The port needs a listener here to stay open.
@@ -14,9 +16,34 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => {});
 });
 
+// A second click while capturing cancels instead of starting another capture.
 chrome.action.onClicked.addListener((tab) => {
-  void runCapture(tab);
+  if (running) requestCancel();
+  else void runCapture(tab);
 });
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.target !== "background" || message.type !== "cancel") return;
+  if (active && message.sessionId === active.sessionId) requestCancel();
+});
+
+// Closing the progress window means the user no longer wants the capture.
+chrome.windows.onRemoved.addListener((windowId) => {
+  if (active && windowId === active.progressWindowId) requestCancel();
+});
+
+// Cancelling is only possible while scrolling. Stitching is short and is
+// left to finish so a copy is never cut in half.
+function requestCancel() {
+  if (active?.cancellable) active.cancelled = true;
+}
+
+function throwIfCancelled() {
+  if (!active?.cancelled) return;
+  const error = new Error("cancel");
+  error.code = "cancel";
+  throw error;
+}
 
 // Used by test/capture.mjs. Web pages cannot call this.
 globalThis.pasteshotCaptureByUrl = async (url) => {
@@ -171,7 +198,7 @@ async function shoot(tabId, windowId, meta, sessionId) {
   const report = async () => {
     const total = Math.min(MAX_TILES, Math.max(tiles.length, xStops.length * scrollStops(contentH, viewH).length));
     await setBadge(String(tiles.length));
-    await chrome.action.setTitle({ title: t("actionTitleBusy", tiles.length) });
+    await chrome.action.setTitle({ title: t("actionTitleBusyCancel", tiles.length) });
     await updateSession(sessionId, { phase: "scroll", current: tiles.length, total });
   };
 
@@ -182,6 +209,7 @@ async function shoot(tabId, windowId, meta, sessionId) {
         truncatedY = true;
         break;
       }
+      throwIfCancelled();
       await ensureActive(tabId);
       const pos = await callPage(tabId, "scrollTo", { x, y });
       const missed = Math.abs(pos.x - x) > 4 || Math.abs(pos.y - y) > 4;
@@ -190,6 +218,7 @@ async function shoot(tabId, windowId, meta, sessionId) {
         break;
       }
       const dataUrl = await captureTab(windowId);
+      throwIfCancelled();
       const blob = await dataUrlToBlob(dataUrl);
       const tile = {
         sessionId,
@@ -256,6 +285,7 @@ async function shoot(tabId, windowId, meta, sessionId) {
 async function runCapture(tab) {
   if (running || tab.id == null) return { ok: false, error: "busy" };
   running = true;
+  active = { sessionId: null, progressWindowId: null, cancellable: true, cancelled: false };
   const tabId = tab.id;
   const windowId = tab.windowId;
   let sessionId = null;
@@ -269,6 +299,7 @@ async function runCapture(tab) {
     await pruneSessions(4);
     sessionId = crypto.randomUUID();
     result.sessionId = sessionId;
+    active.sessionId = sessionId;
     const capturable = isCapturable(tab.url);
     await putSession({
       id: sessionId,
@@ -290,11 +321,13 @@ async function runCapture(tab) {
       console.error(error);
       return null;
     });
+    active.progressWindowId = progressWindowId;
     if (!capturable) {
       result.error = t("errRestricted");
       return result;
     }
 
+    throwIfCancelled();
     await setBadge("…");
     await chrome.scripting.executeScript({
       target: { tabId },
@@ -302,7 +335,10 @@ async function runCapture(tab) {
     });
     injectedTabId = tabId;
     const meta = await callPage(tabId, "prepare", null);
+    throwIfCancelled();
     const shot = await shoot(tabId, windowId, meta, sessionId);
+    throwIfCancelled();
+    active.cancellable = false;
     const resolution = await getResolution();
     await updateSession(sessionId, {
       phase: "copy",
@@ -339,6 +375,14 @@ async function runCapture(tab) {
     if (!copied) await openPreview(sessionId).catch(() => {});
     result = { ok: true, sessionId, copied, imageCount, method, copyError: result.copyError || "" };
   } catch (error) {
+    if (error?.code === "cancel") {
+      result = { ok: false, sessionId, copied: false, imageCount: 0, cancelled: true };
+      if (sessionId) {
+        await updateSession(sessionId, { status: "cancelled", phase: "cancelled" }).catch(() => {});
+        await deleteTiles(sessionId).catch(() => {});
+      }
+      return result;
+    }
     console.error(error?.stack || error?.message || String(error));
     result = { ok: false, sessionId, copied: false, imageCount: 0, error: humanError(error) };
     if (sessionId) {
@@ -358,6 +402,7 @@ async function runCapture(tab) {
     await setBadge("");
     await chrome.action.setTitle({ title: t("actionTitle") }).catch(() => {});
     await chrome.offscreen.closeDocument().catch(() => {});
+    active = null;
     running = false;
   }
   return result;

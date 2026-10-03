@@ -11,6 +11,8 @@ const noteEl = document.querySelector("#note");
 const trackEl = document.querySelector("#track");
 const barEl = document.querySelector("#bar");
 const actionsEl = document.querySelector("#actions");
+const cancelRowEl = document.querySelector("#cancel-row");
+const cancelButton = document.querySelector("#cancel");
 const steps = {
   start: document.querySelector("#step-start"),
   scroll: document.querySelector("#step-scroll"),
@@ -19,9 +21,11 @@ const steps = {
 
 const DONE_CLOSE_MS = 2800;
 const ERROR_CLOSE_MS = 6000;
+const CANCEL_CLOSE_MS = 1500;
 
 let rendered = "";
 let closing = false;
+let cancelling = false;
 
 function closeLater(ms) {
   if (closing) return;
@@ -96,9 +100,20 @@ function render(session) {
   actionsEl.hidden = true;
   actionsEl.replaceChildren();
   trackEl.hidden = phase !== "scroll";
+  const capturing = session.status === "capturing" && (phase === "start" || phase === "scroll");
+  cancelRowEl.hidden = !capturing;
 
   const tall = phase === "multi" || phase === "manual" || phase === "error" || session.status === "error";
-  void fitWindow(tall ? 340 : 260);
+  void fitWindow(tall ? 340 : capturing ? 300 : 260);
+
+  if (phase === "cancelled") {
+    markSteps("cancelled");
+    titleEl.textContent = t("progCancelledTitle");
+    detailEl.textContent = t("progCancelledDetail");
+    document.title = t("progCancelledTitle");
+    closeLater(CANCEL_CLOSE_MS);
+    return;
+  }
 
   if (phase === "error" || session.status === "error") {
     markSteps("start");
@@ -162,7 +177,7 @@ function render(session) {
     markSteps("scroll");
     titleEl.textContent = t("progScrollTitle");
     const progress = session.total ? `${session.current} / ${session.total}` : `${session.current || 0}`;
-    detailEl.textContent = progress;
+    detailEl.textContent = cancelling ? t("progCancelling") : progress;
     const ratio = session.total ? Math.min(1, session.current / session.total) : 0;
     barEl.style.width = `${Math.round(ratio * 100)}%`;
     document.title = t("actionTitleBusy", progress);
@@ -171,7 +186,7 @@ function render(session) {
 
   markSteps("start");
   titleEl.textContent = t("progStartTitle");
-  detailEl.textContent = t("progStartDetail");
+  detailEl.textContent = cancelling ? t("progCancelling") : t("progStartDetail");
   document.title = t("progStartTitle");
 }
 
@@ -190,6 +205,14 @@ async function poll() {
   }
   window.setTimeout(() => void poll(), 200);
 }
+
+cancelButton.addEventListener("click", () => {
+  if (cancelling) return;
+  cancelling = true;
+  cancelButton.disabled = true;
+  detailEl.textContent = t("progCancelling");
+  void chrome.runtime.sendMessage({ target: "background", type: "cancel", sessionId }).catch(() => {});
+});
 
 document.querySelector("#settings").addEventListener("click", () => {
   chrome.runtime.openOptionsPage();

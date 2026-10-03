@@ -118,6 +118,11 @@ button.quiet {
   color: #1d3c32;
 }
 
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 button:focus-visible {
   outline: 3px solid #1d3c32;
   outline-offset: 2px;

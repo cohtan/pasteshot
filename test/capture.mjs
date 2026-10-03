@@ -260,6 +260,74 @@ function assertColor(sample, probe, label) {
   }
 }
 
+// Starts a capture, cancels it from the progress window ("button") or by
+// closing that window ("close"), and checks the page is left as it was.
+async function runCancelFixture(cdp, origin, how) {
+  const pageUrl = `${origin}/fixture.html?cancel=${how}`;
+  const worker = await findTarget(
+    cdp,
+    (target) => target.type === "service_worker" && target.url.includes("background.js"),
+    15000,
+  );
+  const workerSession = await attach(cdp, worker.targetId);
+  const { sessionId: pageSession } = await openPage(cdp, pageUrl);
+  // Progress windows from earlier captures may still be closing; skip them.
+  const before = new Set((await cdp.send("Target.getTargets")).targetInfos.map((target) => target.targetId));
+  const running = evaluate(cdp, workerSession, `globalThis.pasteshotCaptureByUrl(${JSON.stringify(pageUrl)})`);
+
+  let progress = null;
+  let progressSession = null;
+  const deadline = Date.now() + 15000;
+  while (Date.now() < deadline) {
+    const { targetInfos } = await cdp.send("Target.getTargets");
+    progress = targetInfos.find(
+      (target) => target.type === "page" && target.url.includes("progress.html") && !before.has(target.targetId),
+    );
+    if (progress) {
+      progressSession ??= await attach(cdp, progress.targetId);
+      const ready = await evaluate(
+        cdp,
+        progressSession,
+        `!document.querySelector("#cancel-row").hidden && document.querySelector("#bar").style.width !== ""`,
+      ).catch(() => false);
+      if (ready) break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (!progressSession) throw new Error(`cancel/${how}: progress window did not appear`);
+
+  if (how === "button") {
+    await evaluate(cdp, progressSession, `document.querySelector("#cancel").click()`);
+  } else {
+    await cdp.send("Target.closeTarget", { targetId: progress.targetId });
+  }
+  const result = await running;
+  if (!result?.cancelled) throw new Error(`cancel/${how}: capture was not cancelled: ${JSON.stringify(result)}`);
+
+  if (how === "button") {
+    const title = await evaluate(cdp, progressSession, `document.querySelector("#title").textContent`).catch(() => "");
+    const closed = await (async () => {
+      for (let i = 0; i < 40; i += 1) {
+        const { targetInfos } = await cdp.send("Target.getTargets");
+        if (!targetInfos.some((target) => target.targetId === progress.targetId)) return true;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return false;
+    })();
+    if (!closed) throw new Error(`cancel/button: progress window stayed open (title "${title}")`);
+  }
+
+  const page = await evaluate(
+    cdp,
+    pageSession,
+    `({ hook: Boolean(window.__pasteshot), style: Boolean(document.getElementById("pasteshot-capture-style")), y: window.scrollY })`,
+  );
+  if (page.hook || page.style || page.y !== 0) {
+    throw new Error(`cancel/${how}: page was not restored: ${JSON.stringify(page)}`);
+  }
+  console.log(`cancel ok via ${how}`);
+}
+
 async function runWindowFixture(cdp, origin) {
   const pageUrl = `${origin}/fixture.html`;
   const { layout, sessionId, previewSession, previewTargetId, result } = await captureFixture(cdp, pageUrl, "window");
@@ -452,6 +520,8 @@ async function main() {
         console.log(`browser ${path.basename(browser)} extension ${worker.url}`);
         await runWindowFixture(cdp, origin);
         await runInnerFixture(cdp, origin);
+        await runCancelFixture(cdp, origin, "button");
+        await runCancelFixture(cdp, origin, "close");
         ws.close();
         return;
       } catch (error) {

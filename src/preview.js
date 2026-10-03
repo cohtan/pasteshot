@@ -133,6 +133,10 @@ async function present(session) {
   titleEl.textContent = session.title || t("previewTitle");
   document.title = session.title ? t("previewTitleWith", session.title) : t("previewTitle");
   renderSource(session);
+  if (session.status === "cancelled") {
+    setStatus(t("previewCancelled"));
+    return;
+  }
   if (session.status === "error") {
     setStatus(session.error || t("previewCaptureFailed"));
     showNotes([], "note");

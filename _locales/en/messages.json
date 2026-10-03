@@ -202,5 +202,23 @@
   },
   "saveFailed": {
     "message": "Could not save. Please choose again."
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "actionTitleBusyCancel": {
+    "message": "Capturing $1 — click again to cancel"
+  },
+  "progCancelling": {
+    "message": "Cancelling…"
+  },
+  "progCancelledTitle": {
+    "message": "Cancelled"
+  },
+  "progCancelledDetail": {
+    "message": "The page is back the way it was."
+  },
+  "previewCancelled": {
+    "message": "The capture was cancelled."
   }
 }
