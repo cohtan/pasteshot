@@ -6,7 +6,6 @@ import { MAX_RECORD_MS, recordingFileName, videoSize } from "./video.js";
 
 const CAPTURE_INTERVAL_MS = 520;
 const POPUP = "src/popup.html";
-const ALL_SITES = { origins: ["<all_urls>"] };
 let running = false;
 let lastCapture = 0;
 let injectedTabId = null;
@@ -67,12 +66,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (recording && !recording.stopping && tabId === recording.tabId && changeInfo.status === "complete") {
     void injectCursor(tabId);
   }
-});
-
-chrome.permissions.onAdded.addListener(() => {
-  if (!recording || recording.stopping) return;
-  void injectCursor(recording.tabId);
-  void updateSession(recording.sessionId, { cursorLimited: false }).catch(() => {});
 });
 
 async function startFromMenu(mode, tabId) {
@@ -524,7 +517,6 @@ async function runRecording(tab) {
       startedAt: null,
       warnings: [],
       error: capturable ? null : t("errRestricted"),
-      cursorLimited: false,
       fileName: null,
       video: null,
     });
@@ -541,10 +533,7 @@ async function runRecording(tab) {
     const started = await callOffscreen(sessionId, { type: "record-start", streamId, ...size });
     if (!started?.ok) throw new Error(started?.error || "record failed");
     await injectCursor(tabId);
-    // Without access to all sites the cursor stays on this page only. The
-    // progress window offers a button to grant it.
-    const cursorLimited = !(await chrome.permissions.contains(ALL_SITES).catch(() => false));
-    await updateSession(sessionId, { phase: "record", startedAt: Date.now(), videoType: started.mimeType, cursorLimited });
+    await updateSession(sessionId, { phase: "record", startedAt: Date.now(), videoType: started.mimeType });
     await setBadge("REC");
     await chrome.action.setBadgeBackgroundColor({ color: "#c62828" }).catch(() => {});
     await chrome.action.setTitle({ title: t("actionTitleRecording") }).catch(() => {});

@@ -260,12 +260,6 @@
   "progRecHint": {
     "message": "Use the page as usual. Press Stop or the toolbar button when you are done."
   },
-  "progRecCursorLimited": {
-    "message": "The cursor is shown on this page only. Allow access to all sites to keep it on the pages you move to."
-  },
-  "allowAllSites": {
-    "message": "Allow"
-  },
   "progRecStopping": {
     "message": "Stopping…"
   },

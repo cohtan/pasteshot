@@ -465,10 +465,12 @@ async function runRecordFixture(cdp, origin, downloadDir) {
   const { targetId, sessionId: pageSession } = await openPage(cdp, pageUrl);
   await cdp.send("Target.activateTarget", { targetId });
   const before = new Set((await cdp.send("Target.getTargets")).targetInfos.map((target) => target.targetId));
-  const running = evaluate(cdp, workerSession, `globalThis.pasteshotRecordByUrl(${JSON.stringify(pageUrl)}, 3000)`);
+  const running = evaluate(cdp, workerSession, `globalThis.pasteshotRecordByUrl(${JSON.stringify(pageUrl)}, 4500)`);
 
   let cursorSeen = false;
-  const deadline = Date.now() + 2500;
+  let cursorAfterMove = false;
+  let moved = false;
+  const deadline = Date.now() + 4000;
   let step = 0;
   while (Date.now() < deadline) {
     const x = 200 + (step % 20) * 20;
@@ -478,7 +480,15 @@ async function runRecordFixture(cdp, origin, downloadDir) {
       await cdp.send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 }, pageSession);
       await cdp.send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 }, pageSession);
     }
-    cursorSeen ||= await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-cursor"))`);
+    const hasCursor = await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-cursor"))`).catch(() => false);
+    cursorSeen ||= hasCursor;
+    if (moved) cursorAfterMove ||= hasCursor;
+    // Move to another page halfway; the cursor has to be drawn there too.
+    if (step === 20) {
+      await cdp.send("Page.navigate", { url: `${origin}/fixture-inner.html?record` }, pageSession);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      moved = true;
+    }
     if (step === 15) {
       const { targetInfos } = await cdp.send("Target.getTargets");
       const live = targetInfos.find(
@@ -498,6 +508,7 @@ async function runRecordFixture(cdp, origin, downloadDir) {
   const result = await running;
   if (!result?.ok) throw new Error(`record failed: ${JSON.stringify(result)}\n${cdp.logs.join("\n")}`);
   if (!cursorSeen) throw new Error("record: the cursor overlay never appeared");
+  if (!cursorAfterMove) throw new Error("record: the cursor overlay did not come back after moving to another page");
   const left = await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-cursor"))`);
   if (left) throw new Error("record: the cursor overlay was not removed");
 
@@ -613,9 +624,6 @@ async function main() {
   await cp(path.join(root, "icons"), path.join(extensionDir, "icons"), { recursive: true });
   await cp(path.join(root, "_locales"), path.join(extensionDir, "_locales"), { recursive: true });
   const manifest = JSON.parse(await readFile(path.join(root, "manifest.json"), "utf8"));
-  manifest.host_permissions = ["<all_urls>"];
-  // captureVisibleTab accepts <all_urls> or a real toolbar click. The test
-  // cannot click the toolbar, so this copy of the manifest grants host access.
   // clipboardRead is only for checking the copied image in this test.
   manifest.permissions = [...new Set([...(manifest.permissions || []), "clipboardRead"])];
   await writeFile(path.join(extensionDir, "manifest.json"), JSON.stringify(manifest, null, 2));

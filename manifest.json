@@ -7,7 +7,7 @@
   "description": "__MSG_extDescription__",
   "minimum_chrome_version": "116",
   "permissions": ["activeTab", "scripting", "clipboardWrite", "offscreen", "storage", "tabCapture", "downloads"],
-  "optional_host_permissions": ["<all_urls>"],
+  "host_permissions": ["<all_urls>"],
   "options_ui": {
     "page": "src/options.html",
     "open_in_tab": true

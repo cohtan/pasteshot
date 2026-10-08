@@ -45,7 +45,7 @@ If the page is long enough to be split into several images, only the first one i
 
 Videos are saved as MP4, or WebM if the browser cannot write MP4.
 
-Recording continues when you move to another page. To keep the cursor on the pages you move to, allow access to all sites. Until you do, the progress window shows an Allow button. You only need to allow it once.
+Recording continues when you move to another page, and the cursor is drawn again on the new page.
 
 The screens follow the browser's language: Japanese for Japanese, English otherwise.
 
@@ -93,7 +93,7 @@ Permissions used:
 - `storage`: to save the resolution setting
 - `tabCapture`: to record the tab
 - `downloads`: to save recordings to the Downloads folder
-- Access to all sites (optional): to keep the cursor on pages you move to while recording. Asked for only when you press Allow in the progress window
+- Access to all sites: to keep the cursor on pages you move to while recording
 
 ## Development
 

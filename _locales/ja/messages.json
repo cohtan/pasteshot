@@ -260,12 +260,6 @@
   "progRecHint": {
     "message": "いつもどおりページを操作してください。終わったら「停止」かツールバーのボタンを押します。"
   },
-  "progRecCursorLimited": {
-    "message": "カーソルはこのページでだけ表示されます。移動先のページでも表示するには、すべてのサイトへのアクセスを許可してください。"
-  },
-  "allowAllSites": {
-    "message": "許可する"
-  },
   "progRecStopping": {
     "message": "停止しています…"
   },

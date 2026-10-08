@@ -113,7 +113,6 @@ function renderRecording(session) {
   const key = JSON.stringify({
     phase: session.phase,
     status: session.status,
-    cursorLimited: session.cursorLimited,
     error: session.error,
     downloadId,
   });
@@ -177,17 +176,11 @@ function renderRecording(session) {
   }
 
   if (phase === "record") {
-    void fitWindow(session.cursorLimited ? 320 : 280);
+    void fitWindow(280);
     titleEl.textContent = t("progRecTitle");
     showElapsed();
     noteEl.hidden = false;
-    noteEl.textContent = session.cursorLimited ? t("progRecCursorLimited") : t("progRecHint");
-    if (session.cursorLimited) {
-      actionsEl.hidden = false;
-      actionsEl.append(button(t("allowAllSites"), () => {
-        void chrome.permissions.request({ origins: ["<all_urls>"] }).catch(() => {});
-      }, true));
-    }
+    noteEl.textContent = t("progRecHint");
     return;
   }
 
