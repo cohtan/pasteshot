@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { cp, mkdir, mkdtemp, readdir, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -445,8 +446,131 @@ async function assertClipboard(cdp, targetId, previewSession) {
   console.log("clipboard", copied);
 }
 
-async function launch(browser, extensionDir, port) {
+// Chrome derives an unpacked extension's ID from its path.
+function unpackedExtensionId(dir) {
+  const hex = createHash("sha256").update(dir).digest("hex").slice(0, 32);
+  return [...hex].map((char) => String.fromCharCode(97 + Number.parseInt(char, 16))).join("");
+}
+
+// Records the fixture for a few seconds while the mouse moves and clicks,
+// then checks the saved file, the video, and that the cursor was removed.
+async function runRecordFixture(cdp, origin, downloadDir) {
+  const pageUrl = `${origin}/fixture.html?record`;
+  const worker = await findTarget(
+    cdp,
+    (target) => target.type === "service_worker" && target.url.includes("background.js"),
+    15000,
+  );
+  const workerSession = await attach(cdp, worker.targetId);
+  const { targetId, sessionId: pageSession } = await openPage(cdp, pageUrl);
+  await cdp.send("Target.activateTarget", { targetId });
+  const before = new Set((await cdp.send("Target.getTargets")).targetInfos.map((target) => target.targetId));
+  const running = evaluate(cdp, workerSession, `globalThis.pasteshotRecordByUrl(${JSON.stringify(pageUrl)}, 3000)`);
+
+  let cursorSeen = false;
+  const deadline = Date.now() + 2500;
+  let step = 0;
+  while (Date.now() < deadline) {
+    const x = 200 + (step % 20) * 20;
+    const y = 160 + (step % 10) * 12;
+    await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y }, pageSession);
+    if (step % 8 === 4) {
+      await cdp.send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 }, pageSession);
+      await cdp.send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 }, pageSession);
+    }
+    cursorSeen ||= await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-cursor"))`);
+    if (step === 15) {
+      const { targetInfos } = await cdp.send("Target.getTargets");
+      const live = targetInfos.find(
+        (target) => target.type === "page" && target.url.includes("progress.html") && !before.has(target.targetId),
+      );
+      if (live) {
+        const liveSession = await attach(cdp, live.targetId);
+        const shot = await cdp.send("Page.captureScreenshot", { format: "png" }, liveSession);
+        await writeFile("/tmp/pasteshot-progress-recording.png", Buffer.from(shot.data, "base64"));
+      }
+    }
+    step += 1;
+    await new Promise((resolve) => setTimeout(resolve, 80));
+  }
+  const pageShot = await cdp.send("Page.captureScreenshot", { format: "png" }, pageSession);
+  await writeFile("/tmp/pasteshot-record-page.png", Buffer.from(pageShot.data, "base64"));
+  const result = await running;
+  if (!result?.ok) throw new Error(`record failed: ${JSON.stringify(result)}\n${cdp.logs.join("\n")}`);
+  if (!cursorSeen) throw new Error("record: the cursor overlay never appeared");
+  const left = await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-cursor"))`);
+  if (left) throw new Error("record: the cursor overlay was not removed");
+
+  const progress = await findTarget(
+    cdp,
+    (target) => target.type === "page" && target.url.includes("progress.html") && !before.has(target.targetId),
+    5000,
+  );
+  const progressSession = await attach(cdp, progress.targetId);
+  let file = null;
+  for (let i = 0; i < 50 && !file; i += 1) {
+    const names = await readdir(downloadDir).catch(() => []);
+    file = names.find((name) => name.endsWith(".mp4") || name.endsWith(".webm"));
+    if (!file) await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  if (!file) throw new Error(`record: no file in ${downloadDir}`);
+  const { size } = await stat(path.join(downloadDir, file));
+  let ui = null;
+  for (let i = 0; i < 20; i += 1) {
+    ui = await evaluate(
+      cdp,
+      progressSession,
+      `({ title: document.querySelector("#title").textContent, detail: document.querySelector("#detail").textContent })`,
+    );
+    if (ui.detail.includes(file)) break;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  const progressShot = await cdp.send("Page.captureScreenshot", { format: "png" }, progressSession);
+  await writeFile("/tmp/pasteshot-progress-record.png", Buffer.from(progressShot.data, "base64"));
+
+  // Play the stored video and keep a late frame for a look by eye.
+  const video = await evaluate(
+    cdp,
+    progressSession,
+    `new Promise((resolve, reject) => {
+      const req = indexedDB.open("pasteshot");
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => {
+        const get = req.result.transaction("sessions").objectStore("sessions").get(${JSON.stringify(result.sessionId)});
+        get.onsuccess = () => {
+          const el = document.createElement("video");
+          el.muted = true;
+          el.src = URL.createObjectURL(get.result.video);
+          el.onerror = () => reject(new Error("video error"));
+          el.onloadeddata = () => {
+            el.currentTime = 2.4;
+            el.onseeked = () => {
+              const canvas = document.createElement("canvas");
+              canvas.width = el.videoWidth;
+              canvas.height = el.videoHeight;
+              canvas.getContext("2d").drawImage(el, 0, 0);
+              resolve({ width: el.videoWidth, height: el.videoHeight, frame: canvas.toDataURL("image/png") });
+            };
+          };
+        };
+      };
+    })`,
+  );
+  await writeFile("/tmp/pasteshot-record-frame.png", Buffer.from(video.frame.split(",")[1], "base64"));
+  if (!video.width || !video.height) throw new Error(`record: video has no size: ${JSON.stringify(video)}`);
+  if (size < 1000 || size !== result.size) throw new Error(`record: file is ${size} bytes, recorded ${result.size}`);
+  if (!ui.detail.includes(file)) throw new Error(`record: progress shows ${JSON.stringify(ui)}, file ${file}`);
+  console.log(`record ok ${file} ${size} bytes ${video.width}x${video.height} ${result.type}`);
+}
+
+async function launch(browser, extensionDir, port, downloadDir) {
   const profile = await mkdtemp(path.join(tmpdir(), "pasteshot-profile-"));
+  // Browser.setDownloadBehavior would rename files, so set the folder here.
+  await mkdir(path.join(profile, "Default"));
+  await writeFile(
+    path.join(profile, "Default", "Preferences"),
+    JSON.stringify({ download: { default_directory: downloadDir, prompt_for_download: false } }),
+  );
   const logs = [];
   const child = spawn(
     browser,
@@ -461,6 +585,7 @@ async function launch(browser, extensionDir, port) {
       "--disable-background-networking",
       "--disable-component-update",
       "--window-size=1100,860",
+      `--allowlisted-extension-id=${unpackedExtensionId(extensionDir)}`,
       "about:blank",
     ],
     { stdio: ["ignore", "pipe", "pipe"] },
@@ -482,7 +607,8 @@ async function launch(browser, extensionDir, port) {
 }
 
 async function main() {
-  const extensionDir = await mkdtemp(path.join(tmpdir(), "pasteshot-ext-"));
+  const extensionDir = await realpath(await mkdtemp(path.join(tmpdir(), "pasteshot-ext-")));
+  const downloadDir = await mkdtemp(path.join(tmpdir(), "pasteshot-downloads-"));
   await cp(path.join(root, "src"), path.join(extensionDir, "src"), { recursive: true });
   await cp(path.join(root, "icons"), path.join(extensionDir, "icons"), { recursive: true });
   await cp(path.join(root, "_locales"), path.join(extensionDir, "_locales"), { recursive: true });
@@ -501,7 +627,7 @@ async function main() {
     let lastError = null;
     for (const browser of browsers) {
       const debugPort = 9400 + browsers.indexOf(browser);
-      browserSession = await launch(browser, extensionDir, debugPort);
+      browserSession = await launch(browser, extensionDir, debugPort, downloadDir);
       try {
         const version = await waitForJson(debugPort);
         const ws = new WebSocket(version.webSocketDebuggerUrl);
@@ -518,10 +644,14 @@ async function main() {
           throw new Error(`${error.message}\n${browserSession.logs.join("").slice(-2000)}`);
         });
         console.log(`browser ${path.basename(browser)} extension ${worker.url}`);
+        if (new URL(worker.url).host !== unpackedExtensionId(extensionDir)) {
+          throw new Error(`extension ID ${new URL(worker.url).host} != ${unpackedExtensionId(extensionDir)}`);
+        }
         await runWindowFixture(cdp, origin);
         await runInnerFixture(cdp, origin);
         await runCancelFixture(cdp, origin, "button");
         await runCancelFixture(cdp, origin, "close");
+        await runRecordFixture(cdp, origin, downloadDir);
         ws.close();
         return;
       } catch (error) {
@@ -536,6 +666,7 @@ async function main() {
     server.close();
     if (browserSession) await browserSession.close();
     await rm(extensionDir, { recursive: true, force: true });
+    await rm(downloadDir, { recursive: true, force: true });
   }
 }
 

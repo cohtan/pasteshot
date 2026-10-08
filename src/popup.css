@@ -1,0 +1,109 @@
+:root {
+  color: #241f1a;
+  background: #f6f3ec;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  width: 300px;
+  margin: 0;
+  padding: 12px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px 8px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #6d645b;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.link {
+  padding: 0;
+  background: transparent;
+  color: #6d645b;
+  font-size: 12px;
+}
+
+.menu {
+  display: grid;
+  gap: 6px;
+}
+
+.item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: left;
+}
+
+.item:hover:not(:disabled) {
+  background: #e7e1d6;
+}
+
+.item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1d3c32;
+  color: #f7f4ee;
+}
+
+.icon.rec {
+  background: #c62828;
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+}
+
+.text strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.text small {
+  color: #6d645b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+#note {
+  margin: 10px 4px 0;
+  color: #6d645b;
+  font-size: 12px;
+}
+
+button:focus-visible {
+  outline: 3px solid #1d3c32;
+  outline-offset: 2px;
+}

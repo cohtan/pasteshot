@@ -5,6 +5,6 @@
   "license": "MIT",
   "packageManager": "pnpm@10.24.0",
   "scripts": {
-    "test": "node --test test/geometry.test.js test/settings.test.js"
+    "test": "node --test test/geometry.test.js test/settings.test.js test/video.test.js"
   }
 }

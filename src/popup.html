@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>PasteShot</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="top">
+      <p class="eyebrow">PasteShot</p>
+      <button id="settings" type="button" class="link" data-i18n="settings">Settings</button>
+    </div>
+    <div class="menu">
+      <button id="capture" type="button" class="item">
+        <span class="icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20"><rect x="3" y="2" width="14" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+        </span>
+        <span class="text">
+          <strong data-i18n="menuCapture">Copy page as image</strong>
+          <small data-i18n="menuCaptureHint">The whole page, including the part you scroll to.</small>
+        </span>
+      </button>
+      <button id="record" type="button" class="item">
+        <span class="icon rec" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" stroke-width="1.6" /><circle cx="10" cy="10" r="3.6" fill="currentColor" /></svg>
+        </span>
+        <span class="text">
+          <strong data-i18n="menuRecord">Record this tab</strong>
+          <small data-i18n="menuRecordHint">Saves a video of what you do, with the cursor shown.</small>
+        </span>
+      </button>
+    </div>
+    <p id="note" hidden></p>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

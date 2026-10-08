@@ -2,13 +2,26 @@ import { deleteTiles, failStaleSessions, pruneSessions, putSession, putTile, upd
 import { MAX_TILES, scrollStops } from "./geometry.js";
 import { t } from "./i18n.js";
 import { getResolution } from "./settings.js";
+import { MAX_RECORD_MS, recordingFileName, videoSize } from "./video.js";
 
 const CAPTURE_INTERVAL_MS = 520;
+const POPUP = "src/popup.html";
+const ALL_SITES = { origins: ["<all_urls>"] };
 let running = false;
 let lastCapture = 0;
 let injectedTabId = null;
 // The capture in progress: { sessionId, progressWindowId, cancellable, cancelled }.
 let active = null;
+// The recording in progress: { sessionId, tabId, title, progressWindowId, timer, stopping }.
+let recording = null;
+
+// While a capture or recording runs, the toolbar button skips the menu so a
+// click reaches onClicked and cancels or stops. A worker that restarts has
+// nothing running, so the menu comes back.
+function setBusy(busy) {
+  return chrome.action.setPopup({ popup: busy ? "" : POPUP }).catch(() => {});
+}
+void setBusy(false);
 
 // The progress and preview pages hold a "keepalive" port so the worker is not
 // suspended mid-capture. The port needs a listener here to stay open.
@@ -16,21 +29,59 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => {});
 });
 
-// A second click while capturing cancels instead of starting another capture.
+// The menu is off while busy, so a click here cancels a capture or stops a
+// recording. It only starts a capture if the menu could not be set.
 chrome.action.onClicked.addListener((tab) => {
-  if (running) requestCancel();
+  if (recording) void stopRecording();
+  else if (running) requestCancel();
   else void runCapture(tab);
 });
 
-chrome.runtime.onMessage.addListener((message) => {
-  if (message?.target !== "background" || message.type !== "cancel") return;
-  if (active && message.sessionId === active.sessionId) requestCancel();
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.target !== "background") return;
+  if (message.type === "start") {
+    // From the menu. Answer first so the menu can close.
+    sendResponse({ ok: !running });
+    void startFromMenu(message.mode, message.tabId);
+    return;
+  }
+  if (message.type === "cancel" && active && message.sessionId === active.sessionId) requestCancel();
+  if ((message.type === "stop" || message.type === "record-ended") && recording?.sessionId === message.sessionId) {
+    void stopRecording();
+  }
+  // "record-tick" only keeps the worker awake.
 });
 
 // Closing the progress window means the user no longer wants the capture.
+// For a recording it means "done": the video is still saved.
 chrome.windows.onRemoved.addListener((windowId) => {
   if (active && windowId === active.progressWindowId) requestCancel();
+  if (recording && windowId === recording.progressWindowId) {
+    recording.progressWindowId = null;
+    void stopRecording();
+  }
 });
+
+// A new page in the recorded tab needs the cursor again.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (recording && !recording.stopping && tabId === recording.tabId && changeInfo.status === "complete") {
+    void injectCursor(tabId);
+  }
+});
+
+chrome.permissions.onAdded.addListener(() => {
+  if (!recording || recording.stopping) return;
+  void injectCursor(recording.tabId);
+  void updateSession(recording.sessionId, { cursorLimited: false }).catch(() => {});
+});
+
+async function startFromMenu(mode, tabId) {
+  if (running || tabId == null) return;
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab) return;
+  if (mode === "record") await runRecording(tab);
+  else await runCapture(tab);
+}
 
 // Cancelling is only possible while scrolling. Stitching is short and is
 // left to finish so a copy is never cut in half.
@@ -53,6 +104,17 @@ globalThis.pasteshotCaptureByUrl = async (url) => {
   return runCapture(tab);
 };
 
+// Used by test/capture.mjs. Starts recording the tab, waits, and stops.
+globalThis.pasteshotRecordByUrl = async (url, ms = 2000) => {
+  const tabs = await chrome.tabs.query({});
+  const tab = tabs.find((item) => item.url === url);
+  if (!tab) throw new Error("tab not found");
+  const started = await runRecording(tab);
+  if (!started.ok) return started;
+  await delay(ms);
+  return stopRecording();
+};
+
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -61,7 +123,7 @@ function isCapturable(url = "") {
   return /^(https?|file):/i.test(url);
 }
 
-function humanError(error) {
+function humanError(error, fallback = "errGeneric") {
   const message = String(error?.message || error);
   if (error?.code === "resize" || message === "resize") {
     return t("errResize");
@@ -69,7 +131,7 @@ function humanError(error) {
   if (/Cannot access contents|gallery|chrome:\/\/|edge:\/\/|about:|restricted/i.test(message)) {
     return t("errRestricted");
   }
-  return t("errGeneric");
+  return t(fallback);
 }
 
 async function setBadge(text) {
@@ -149,19 +211,19 @@ async function openProgress(sessionId, windowId) {
   return created.id;
 }
 
-async function callOffscreen(sessionId) {
+async function callOffscreen(sessionId, extra = {}) {
   const existing = await chrome.runtime.getContexts({ contextTypes: ["OFFSCREEN_DOCUMENT"] });
   if (existing.length === 0) {
     await chrome.offscreen.createDocument({
       url: "src/offscreen.html",
-      reasons: ["CLIPBOARD", "BLOBS"],
+      reasons: ["CLIPBOARD", "BLOBS", "USER_MEDIA"],
       justification: t("offscreenJustification"),
     });
   }
   let lastError = null;
   for (let attempt = 0; attempt < 20; attempt += 1) {
     try {
-      const response = await chrome.runtime.sendMessage({ target: "offscreen", sessionId });
+      const response = await chrome.runtime.sendMessage({ target: "offscreen", sessionId, ...extra });
       if (response) return response;
     } catch (error) {
       lastError = error;
@@ -285,6 +347,7 @@ async function shoot(tabId, windowId, meta, sessionId) {
 async function runCapture(tab) {
   if (running || tab.id == null) return { ok: false, error: "busy" };
   running = true;
+  await setBusy(true);
   active = { sessionId: null, progressWindowId: null, cancellable: true, cancelled: false };
   const tabId = tab.id;
   const windowId = tab.windowId;
@@ -404,6 +467,146 @@ async function runCapture(tab) {
     await chrome.offscreen.closeDocument().catch(() => {});
     active = null;
     running = false;
+    await setBusy(false);
+  }
+  return result;
+}
+
+async function injectCursor(tabId) {
+  const target = { tabId, allFrames: true };
+  try {
+    await chrome.scripting.executeScript({ target, files: ["src/cursor.js"] });
+  } catch {
+    // Without access to every frame, draw in the top frame at least.
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["src/cursor.js"] }).catch(() => {});
+  }
+}
+
+async function removeCursor(tabId) {
+  await chrome.scripting
+    .executeScript({ target: { tabId, allFrames: true }, func: () => window.__pasteshotCursor?.remove() })
+    .catch(() => {});
+}
+
+async function viewportOf(tab) {
+  try {
+    const [result] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => ({ width: window.innerWidth, height: window.innerHeight, ratio: window.devicePixelRatio }),
+    });
+    if (result?.result?.width) return result.result;
+  } catch {
+    /* Fall back to the tab size. */
+  }
+  return { width: tab.width || 1280, height: tab.height || 720, ratio: 1 };
+}
+
+async function runRecording(tab) {
+  if (running || tab.id == null) return { ok: false, error: "busy" };
+  running = true;
+  await setBusy(true);
+  const tabId = tab.id;
+  const sessionId = crypto.randomUUID();
+  recording = { sessionId, tabId, title: tab.title || "", progressWindowId: null, timer: 0, stopping: false };
+
+  try {
+    await failStaleSessions(t("errStalled"));
+    await pruneSessions(4);
+    const capturable = isCapturable(tab.url);
+    await putSession({
+      id: sessionId,
+      kind: "record",
+      status: capturable ? "recording" : "error",
+      phase: capturable ? "start" : "error",
+      title: tab.title || "",
+      url: tab.url || "",
+      createdAt: Date.now(),
+      startedAt: null,
+      warnings: [],
+      error: capturable ? null : t("errRestricted"),
+      cursorLimited: false,
+      fileName: null,
+      video: null,
+    });
+    recording.progressWindowId = await openProgress(sessionId, tab.windowId).catch((error) => {
+      console.error(error);
+      return null;
+    });
+    if (!capturable) throw Object.assign(new Error("restricted"), { code: "restricted" });
+
+    // Ask for the stream first: it must follow the click in the menu closely.
+    const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
+    const viewport = await viewportOf(tab);
+    const size = videoSize(viewport.width, viewport.height, viewport.ratio);
+    const started = await callOffscreen(sessionId, { type: "record-start", streamId, ...size });
+    if (!started?.ok) throw new Error(started?.error || "record failed");
+    await injectCursor(tabId);
+    // Without access to all sites the cursor stays on this page only. The
+    // progress window offers a button to grant it.
+    const cursorLimited = !(await chrome.permissions.contains(ALL_SITES).catch(() => false));
+    await updateSession(sessionId, { phase: "record", startedAt: Date.now(), videoType: started.mimeType, cursorLimited });
+    await setBadge("REC");
+    await chrome.action.setBadgeBackgroundColor({ color: "#c62828" }).catch(() => {});
+    await chrome.action.setTitle({ title: t("actionTitleRecording") }).catch(() => {});
+    recording.timer = setTimeout(() => void stopRecording({ autoStopped: true }), MAX_RECORD_MS);
+    return { ok: true, sessionId };
+  } catch (error) {
+    if (error?.code !== "restricted") console.error(error?.stack || error?.message || String(error));
+    const message = error?.code === "restricted" ? t("errRestricted") : humanError(error, "errRecord");
+    await updateSession(sessionId, {
+      status: "error",
+      phase: "error",
+      error: message,
+      detail: String(error?.stack || error?.message || error),
+    }).catch(() => {});
+    await finishRecording(tabId);
+    return { ok: false, sessionId, error: message };
+  }
+}
+
+async function finishRecording(tabId) {
+  clearTimeout(recording?.timer);
+  await removeCursor(tabId);
+  await setBadge("");
+  await chrome.action.setTitle({ title: t("actionTitle") }).catch(() => {});
+  await chrome.offscreen.closeDocument().catch(() => {});
+  recording = null;
+  running = false;
+  await setBusy(false);
+}
+
+async function stopRecording({ autoStopped = false } = {}) {
+  const current = recording;
+  if (!current || current.stopping) return { ok: false, error: "not recording" };
+  current.stopping = true;
+  const { sessionId, tabId } = current;
+  let result;
+  try {
+    await updateSession(sessionId, { phase: "save" });
+    const stopped = await callOffscreen(sessionId, { type: "record-stop" });
+    if (!stopped?.ok) throw new Error(stopped?.error || "stop failed");
+    const fileName = recordingFileName(current.title, new Date(), stopped.type);
+    const warnings = autoStopped ? [t("warnRecordLimit")] : [];
+    await updateSession(sessionId, { status: "ready", phase: "saved", fileName, stoppedAt: Date.now(), warnings });
+    // The progress window saves the file, so it has to be open.
+    if (!current.progressWindowId) {
+      const tab = await chrome.tabs.get(tabId).catch(() => null);
+      const windowId = tab?.windowId ?? (await chrome.windows.getLastFocused().catch(() => null))?.id;
+      await openProgress(sessionId, windowId).catch((error) => console.error(error));
+    }
+    result = { ok: true, sessionId, fileName, type: stopped.type, size: stopped.size };
+  } catch (error) {
+    console.error(error?.stack || error?.message || String(error));
+    const message = humanError(error, "errRecordSave");
+    await updateSession(sessionId, {
+      status: "error",
+      phase: "error",
+      error: message,
+      detail: String(error?.stack || error?.message || error),
+    }).catch(() => {});
+    result = { ok: false, sessionId, error: message };
+  } finally {
+    await finishRecording(tabId);
   }
   return result;
 }

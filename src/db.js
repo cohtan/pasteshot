@@ -110,7 +110,7 @@ export async function failStaleSessions(error) {
   await transactionDone(tx);
   db.close();
   for (const session of sessions) {
-    if (session.status !== "capturing") continue;
+    if (session.status !== "capturing" && session.status !== "recording") continue;
     await updateSession(session.id, { status: "error", phase: "error", error });
     await deleteTiles(session.id);
   }

@@ -129,3 +129,22 @@ button:focus-visible {
   outline: 3px solid #1d3c32;
   outline-offset: 2px;
 }
+
+h1.recording::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 8px 2px 0;
+  border-radius: 50%;
+  background: #c62828;
+  animation: blink 1.2s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to { visibility: hidden; }
+}
+
+button.stop {
+  background: #c62828;
+}

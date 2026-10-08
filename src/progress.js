@@ -1,6 +1,7 @@
-import { getSession } from "./db.js";
+import { getSession, updateSession } from "./db.js";
 import { localize, t } from "./i18n.js";
 import { copyPng } from "./stitch.js";
+import { extensionForVideo, formatElapsed } from "./video.js";
 
 localize();
 
@@ -13,6 +14,7 @@ const barEl = document.querySelector("#bar");
 const actionsEl = document.querySelector("#actions");
 const cancelRowEl = document.querySelector("#cancel-row");
 const cancelButton = document.querySelector("#cancel");
+const stepsEl = document.querySelector("#steps");
 const steps = {
   start: document.querySelector("#step-start"),
   scroll: document.querySelector("#step-scroll"),
@@ -26,6 +28,10 @@ const CANCEL_CLOSE_MS = 1000;
 let rendered = "";
 let closing = false;
 let cancelling = false;
+let recordMode = false;
+let recordStartedAt = 0;
+let downloadStarted = false;
+let downloadId = null;
 
 function closeLater(ms) {
   if (closing) return;
@@ -81,7 +87,121 @@ async function copyStored(index) {
     : t("copiedPaste");
 }
 
+async function saveVideo(session) {
+  if (session.downloadId != null) downloadId = session.downloadId;
+  if (downloadStarted || downloadId != null) return;
+  downloadStarted = true;
+  const url = URL.createObjectURL(session.video);
+  try {
+    downloadId = await chrome.downloads.download({ url, filename: session.fileName, conflictAction: "uniquify" });
+  } catch {
+    // Fall back to a plain name if the browser rejects the title in it.
+    const filename = `PasteShot.${extensionForVideo(session.videoType)}`;
+    downloadId = await chrome.downloads.download({ url, filename, conflictAction: "uniquify" });
+  }
+  await updateSession(sessionId, { downloadId });
+}
+
+function showElapsed() {
+  if (!recordStartedAt || cancelling) return;
+  const elapsed = formatElapsed(Date.now() - recordStartedAt);
+  detailEl.textContent = elapsed;
+  document.title = `${t("progRecTitle")} ${elapsed}`;
+}
+
+function renderRecording(session) {
+  const key = JSON.stringify({
+    phase: session.phase,
+    status: session.status,
+    cursorLimited: session.cursorLimited,
+    error: session.error,
+    downloadId,
+  });
+  if (key === rendered) return;
+  rendered = key;
+
+  const phase = session.phase || "start";
+  recordMode = true;
+  stepsEl.hidden = true;
+  trackEl.hidden = true;
+  noteEl.hidden = true;
+  actionsEl.hidden = true;
+  actionsEl.replaceChildren();
+  titleEl.classList.toggle("recording", phase === "record");
+  cancelButton.textContent = t("stopRecording");
+  cancelButton.className = "stop";
+  cancelRowEl.hidden = phase !== "record";
+  recordStartedAt = phase === "record" ? session.startedAt || Date.now() : 0;
+
+  if (phase === "error" || session.status === "error") {
+    void fitWindow(300);
+    titleEl.textContent = t("progRecErrorTitle");
+    detailEl.textContent = session.error || t("tryAgain");
+    actionsEl.hidden = false;
+    actionsEl.append(button(t("close"), () => window.close(), true));
+    document.title = t("progRecErrorTitle");
+    closeLater(ERROR_CLOSE_MS);
+    return;
+  }
+
+  if (phase === "saved") {
+    void fitWindow(session.warnings?.length ? 300 : 260);
+    const title = downloadId == null ? t("progRecSaveTitle") : t("progRecSavedTitle");
+    titleEl.textContent = title;
+    document.title = title;
+    detailEl.textContent = downloadId == null ? t("progRecSaving") : t("progRecSavedDetail", session.fileName);
+    if (session.warnings?.length) {
+      noteEl.hidden = false;
+      noteEl.textContent = session.warnings[0];
+    }
+    actionsEl.hidden = false;
+    if (downloadId != null) {
+      actionsEl.append(button(t("showInFolder"), () => chrome.downloads.show(downloadId)));
+    }
+    actionsEl.append(button(t("close"), () => window.close(), true));
+    void saveVideo(session).catch((error) => {
+      console.error(error);
+      downloadStarted = false;
+      detailEl.textContent = t("progRecDownloadFailed");
+      actionsEl.prepend(button(t("download"), () => void saveVideo(session).then(() => { rendered = ""; })));
+    });
+    return;
+  }
+
+  if (phase === "save") {
+    void fitWindow(260);
+    titleEl.textContent = t("progRecSaveTitle");
+    detailEl.textContent = t("progRecSaving");
+    document.title = t("progRecSaveTitle");
+    return;
+  }
+
+  if (phase === "record") {
+    void fitWindow(session.cursorLimited ? 320 : 280);
+    titleEl.textContent = t("progRecTitle");
+    showElapsed();
+    noteEl.hidden = false;
+    noteEl.textContent = session.cursorLimited ? t("progRecCursorLimited") : t("progRecHint");
+    if (session.cursorLimited) {
+      actionsEl.hidden = false;
+      actionsEl.append(button(t("allowAllSites"), () => {
+        void chrome.permissions.request({ origins: ["<all_urls>"] }).catch(() => {});
+      }, true));
+    }
+    return;
+  }
+
+  void fitWindow(260);
+  titleEl.textContent = t("progRecStartTitle");
+  detailEl.textContent = t("progRecStartDetail");
+  document.title = t("progRecStartTitle");
+}
+
 function render(session) {
+  if (session.kind === "record") {
+    renderRecording(session);
+    return;
+  }
   const key = JSON.stringify({
     phase: session.phase,
     current: session.current,
@@ -210,9 +330,12 @@ cancelButton.addEventListener("click", () => {
   if (cancelling) return;
   cancelling = true;
   cancelButton.disabled = true;
-  detailEl.textContent = t("progCancelling");
-  void chrome.runtime.sendMessage({ target: "background", type: "cancel", sessionId }).catch(() => {});
+  detailEl.textContent = recordMode ? t("progRecStopping") : t("progCancelling");
+  const type = recordMode ? "stop" : "cancel";
+  void chrome.runtime.sendMessage({ target: "background", type, sessionId }).catch(() => {});
 });
+
+window.setInterval(showElapsed, 500);
 
 document.querySelector("#settings").addEventListener("click", () => {
   chrome.runtime.openOptionsPage();

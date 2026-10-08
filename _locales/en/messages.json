@@ -3,16 +3,16 @@
     "message": "PasteShot"
   },
   "extDescription": {
-    "message": "Turns the whole page you are viewing, including the part you scroll to, into one image."
+    "message": "Turns the whole page you are viewing into one image, or records what you do in the tab as a video."
   },
   "actionTitle": {
-    "message": "Capture the whole page"
+    "message": "Copy the page as an image, or record it"
   },
   "actionTitleBusy": {
     "message": "Capturing $1"
   },
   "offscreenJustification": {
-    "message": "Combines the captured page into one image and copies it to the clipboard."
+    "message": "Combines the captured page into one image and copies it to the clipboard, and records the tab as a video."
   },
   "errResize": {
     "message": "The window was resized during capture, so it stopped. Please try again."
@@ -220,5 +220,74 @@
   },
   "previewCancelled": {
     "message": "The capture was cancelled."
+  },
+  "menuCapture": {
+    "message": "Copy page as image"
+  },
+  "menuCaptureHint": {
+    "message": "The whole page, including the part you scroll to."
+  },
+  "menuRecord": {
+    "message": "Record this tab"
+  },
+  "menuRecordHint": {
+    "message": "Saves a video of what you do, with the cursor shown."
+  },
+  "actionTitleRecording": {
+    "message": "Recording — click to stop"
+  },
+  "errRecord": {
+    "message": "Could not start recording. Reload the page and try again."
+  },
+  "errRecordSave": {
+    "message": "Could not save the recording. Please try again."
+  },
+  "warnRecordLimit": {
+    "message": "Recording stopped at the 30-minute limit."
+  },
+  "stopRecording": {
+    "message": "Stop"
+  },
+  "progRecStartTitle": {
+    "message": "Starting recording"
+  },
+  "progRecStartDetail": {
+    "message": "Getting the tab ready."
+  },
+  "progRecTitle": {
+    "message": "Recording"
+  },
+  "progRecHint": {
+    "message": "Use the page as usual. Press Stop or the toolbar button when you are done."
+  },
+  "progRecCursorLimited": {
+    "message": "The cursor is shown on this page only. Allow access to all sites to keep it on the pages you move to."
+  },
+  "allowAllSites": {
+    "message": "Allow"
+  },
+  "progRecStopping": {
+    "message": "Stopping…"
+  },
+  "progRecSaveTitle": {
+    "message": "Saving"
+  },
+  "progRecSaving": {
+    "message": "Saving the video to your Downloads folder."
+  },
+  "progRecSavedTitle": {
+    "message": "Saved"
+  },
+  "progRecSavedDetail": {
+    "message": "Saved to Downloads as “$1”."
+  },
+  "progRecDownloadFailed": {
+    "message": "Could not save the file. Press Download to try again."
+  },
+  "progRecErrorTitle": {
+    "message": "Recording failed"
+  },
+  "showInFolder": {
+    "message": "Show in folder"
   }
 }

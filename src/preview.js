@@ -3,6 +3,7 @@ import { pageWidth } from "./geometry.js";
 import { copyPng, stitch } from "./stitch.js";
 import { localize, t } from "./i18n.js";
 import { resolutionById } from "./settings.js";
+import { fileStem } from "./video.js";
 
 localize();
 
@@ -22,11 +23,6 @@ let started = false;
 let pollTimer = 0;
 
 chrome.runtime.connect({ name: "keepalive" });
-
-function fileStem(title) {
-  const stem = (title || "page").replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
-  return stem || "page";
-}
 
 function extensionFor(type) {
   return type === "image/png" ? "png" : "jpg";

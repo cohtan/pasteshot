@@ -3,16 +3,16 @@
     "message": "PasteShot"
   },
   "extDescription": {
-    "message": "見ているページ全体を、スクロール分も含めて1枚の画像にします。"
+    "message": "見ているページ全体を1枚の画像にしたり、タブでの操作を動画に録画したりします。"
   },
   "actionTitle": {
-    "message": "ページ全体を画像にする"
+    "message": "ページを画像でコピー、または録画"
   },
   "actionTitleBusy": {
     "message": "撮影中 $1"
   },
   "offscreenJustification": {
-    "message": "撮影したページを1枚の画像にまとめて、クリップボードへコピーします。"
+    "message": "撮影したページを1枚の画像にまとめてクリップボードへコピーし、タブを動画に録画します。"
   },
   "errResize": {
     "message": "撮影中にウィンドウの大きさが変わったので中断しました。もう一度試してください。"
@@ -220,5 +220,74 @@
   },
   "previewCancelled": {
     "message": "撮影はキャンセルされました。"
+  },
+  "menuCapture": {
+    "message": "ページを画像でコピー"
+  },
+  "menuCaptureHint": {
+    "message": "スクロールしないと見えない部分も含めて、ページ全体を撮ります。"
+  },
+  "menuRecord": {
+    "message": "このタブを録画"
+  },
+  "menuRecordHint": {
+    "message": "操作の様子を、カーソル付きの動画で保存します。"
+  },
+  "actionTitleRecording": {
+    "message": "録画中 — クリックで停止"
+  },
+  "errRecord": {
+    "message": "録画を始められませんでした。ページを再読み込みして、もう一度試してください。"
+  },
+  "errRecordSave": {
+    "message": "録画を保存できませんでした。もう一度試してください。"
+  },
+  "warnRecordLimit": {
+    "message": "30分の上限に達したので録画を止めました。"
+  },
+  "stopRecording": {
+    "message": "停止"
+  },
+  "progRecStartTitle": {
+    "message": "録画を準備中"
+  },
+  "progRecStartDetail": {
+    "message": "タブの準備をしています。"
+  },
+  "progRecTitle": {
+    "message": "録画中"
+  },
+  "progRecHint": {
+    "message": "いつもどおりページを操作してください。終わったら「停止」かツールバーのボタンを押します。"
+  },
+  "progRecCursorLimited": {
+    "message": "カーソルはこのページでだけ表示されます。移動先のページでも表示するには、すべてのサイトへのアクセスを許可してください。"
+  },
+  "allowAllSites": {
+    "message": "許可する"
+  },
+  "progRecStopping": {
+    "message": "停止しています…"
+  },
+  "progRecSaveTitle": {
+    "message": "保存中"
+  },
+  "progRecSaving": {
+    "message": "動画をダウンロードフォルダに保存しています。"
+  },
+  "progRecSavedTitle": {
+    "message": "保存しました"
+  },
+  "progRecSavedDetail": {
+    "message": "ダウンロードフォルダに「$1」として保存しました。"
+  },
+  "progRecDownloadFailed": {
+    "message": "ファイルを保存できませんでした。「ダウンロード」を押してやり直してください。"
+  },
+  "progRecErrorTitle": {
+    "message": "録画できませんでした"
+  },
+  "showInFolder": {
+    "message": "フォルダを開く"
   }
 }
