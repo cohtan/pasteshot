@@ -27,6 +27,11 @@ test("fileStem removes characters Windows does not allow", () => {
   assert.equal(fileStem(""), "page");
 });
 
+test("fileStem removes marks that reverse the text direction", () => {
+  assert.equal(fileStem("invoice\u202Efdp.exe"), "invoice fdp.exe");
+  assert.equal(fileStem("a\u2066b\u2069c\u200fd"), "a b c d");
+});
+
 test("recordingFileName adds a local timestamp", () => {
   const date = new Date(2026, 9, 8, 9, 5, 3);
   assert.equal(recordingFileName("Help | Site", date, "video/mp4"), "Help Site 2026-10-08 09.05.03.mp4");

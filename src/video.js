@@ -32,8 +32,14 @@ export function videoSize(width, height, pixelRatio = 1) {
   return { width: even(w), height: even(h) };
 }
 
+// Also drops the marks that change text direction, so a title cannot make
+// the name look like it ends in another extension.
 export function fileStem(title) {
-  const stem = (title || "page").replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+  const stem = (title || "page")
+    .replace(/[\\/:*?"<>|\u0000-\u001f\u200e\u200f\u202a-\u202e\u2066-\u2069]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
   return stem.replace(/[. ]+$/, "") || "page";
 }
 
