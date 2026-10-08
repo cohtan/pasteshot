@@ -6,6 +6,8 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   padding: 16px 18px 18px;
