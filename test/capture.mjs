@@ -574,6 +574,48 @@ async function runRecordFixture(cdp, origin, downloadDir) {
   console.log(`record ok ${file} ${size} bytes ${video.width}x${video.height} ${result.type}`);
 }
 
+// Closing every progress and preview page has to delete the stored captures.
+async function runReleaseCheck(cdp) {
+  const worker = await findTarget(
+    cdp,
+    (target) => target.type === "service_worker" && target.url.includes("background.js"),
+    15000,
+  );
+  const workerSession = await attach(cdp, worker.targetId);
+  const { targetInfos } = await cdp.send("Target.getTargets");
+  for (const target of targetInfos) {
+    if (target.type === "page" && /\/src\/(progress|preview)\.html/.test(target.url)) {
+      await cdp.send("Target.closeTarget", { targetId: target.targetId });
+    }
+  }
+  let left = null;
+  for (let i = 0; i < 40; i += 1) {
+    left = await evaluate(
+      cdp,
+      workerSession,
+      `new Promise((resolve, reject) => {
+        const req = indexedDB.open("pasteshot");
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => {
+          const tx = req.result.transaction(["sessions", "tiles"]);
+          const sessions = tx.objectStore("sessions").count();
+          const tiles = tx.objectStore("tiles").count();
+          tx.oncomplete = () => {
+            req.result.close();
+            resolve({ sessions: sessions.result, tiles: tiles.result });
+          };
+        };
+      })`,
+    );
+    if (left.sessions === 0 && left.tiles === 0) break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  if (left.sessions !== 0 || left.tiles !== 0) {
+    throw new Error(`release: data left after closing the windows: ${JSON.stringify(left)}`);
+  }
+  console.log("release ok");
+}
+
 async function launch(browser, extensionDir, port, downloadDir) {
   const profile = await mkdtemp(path.join(tmpdir(), "pasteshot-profile-"));
   // Browser.setDownloadBehavior would rename files, so set the folder here.
@@ -660,6 +702,7 @@ async function main() {
         await runCancelFixture(cdp, origin, "button");
         await runCancelFixture(cdp, origin, "close");
         await runRecordFixture(cdp, origin, downloadDir);
+        await runReleaseCheck(cdp);
         ws.close();
         return;
       } catch (error) {

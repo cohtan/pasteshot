@@ -86,29 +86,32 @@ export async function deleteTiles(sessionId) {
   db.close();
 }
 
-export async function pruneSessions(keep = 4) {
+export async function allSessions() {
   const db = await openDb();
   const tx = db.transaction("sessions", "readonly");
   const sessions = await requestDone(tx.objectStore("sessions").getAll());
   await transactionDone(tx);
   db.close();
+  return sessions;
+}
+
+export async function deleteSession(id) {
+  await deleteTiles(id);
+  const db = await openDb();
+  const tx = db.transaction("sessions", "readwrite");
+  tx.objectStore("sessions").delete(id);
+  await transactionDone(tx);
+  db.close();
+}
+
+export async function pruneSessions(keep = 4) {
+  const sessions = await allSessions();
   const extra = sessions.sort((a, b) => b.createdAt - a.createdAt).slice(keep);
-  for (const session of extra) {
-    await deleteTiles(session.id);
-    const next = await openDb();
-    const write = next.transaction("sessions", "readwrite");
-    write.objectStore("sessions").delete(session.id);
-    await transactionDone(write);
-    next.close();
-  }
+  for (const session of extra) await deleteSession(session.id);
 }
 
 export async function failStaleSessions(error) {
-  const db = await openDb();
-  const tx = db.transaction("sessions", "readonly");
-  const sessions = await requestDone(tx.objectStore("sessions").getAll());
-  await transactionDone(tx);
-  db.close();
+  const sessions = await allSessions();
   for (const session of sessions) {
     if (session.status !== "capturing" && session.status !== "recording") continue;
     await updateSession(session.id, { status: "error", phase: "error", error });

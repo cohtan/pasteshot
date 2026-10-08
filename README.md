@@ -82,7 +82,7 @@ Recording limitations:
 
 Everything, images and videos alike, is processed on your device. Nothing is sent to any server. Only the resolution setting is saved through Chrome sync so it follows you across browsers.
 
-The last 4 captures and recordings (the images or videos, page titles, and URLs) are kept inside the extension (IndexedDB) so the preview page can reopen them. Starting a 5th capture removes the oldest. Removing the extension deletes all of them.
+While a capture or recording is shown in the progress window or the preview page, its data (the images or video, the page title, and the URL) is kept inside the extension (IndexedDB). Closing those windows deletes it. Anything left behind, for example after the browser quits, is deleted the next time the browser starts.
 
 Permissions used:
 

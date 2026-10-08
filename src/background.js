@@ -1,4 +1,13 @@
-import { deleteTiles, failStaleSessions, pruneSessions, putSession, putTile, updateSession } from "./db.js";
+import {
+  allSessions,
+  deleteSession,
+  deleteTiles,
+  failStaleSessions,
+  pruneSessions,
+  putSession,
+  putTile,
+  updateSession,
+} from "./db.js";
 import { MAX_TILES, scrollStops } from "./geometry.js";
 import { t } from "./i18n.js";
 import { getResolution } from "./settings.js";
@@ -13,6 +22,9 @@ let injectedTabId = null;
 let active = null;
 // The recording in progress: { sessionId, tabId, title, progressWindowId, timer, stopping }.
 let recording = null;
+// Sessions whose progress or preview page was just opened. A page that is
+// still loading may not be listed as a context yet.
+const opening = new Set();
 
 // While a capture or recording runs, the toolbar button skips the menu so a
 // click reaches onClicked and cancels or stops. A worker that restarts has
@@ -26,6 +38,35 @@ void setBusy(false);
 // suspended mid-capture. The port needs a listener here to stay open.
 chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => {});
+});
+
+// A session holds images or a video of a page, with its title and URL.
+// Once no progress or preview page shows it, it is deleted. Nothing is open
+// when the worker starts with the browser, so old sessions go then too.
+async function releaseUnviewed(closedTabId = null) {
+  const contexts = await chrome.runtime.getContexts({ contextTypes: ["TAB"] });
+  const viewed = new Set(opening);
+  for (const context of contexts) {
+    if (context.tabId === closedTabId) continue;
+    const id = new URL(context.documentUrl).searchParams.get("id");
+    if (id) viewed.add(id);
+  }
+  if (active?.sessionId) viewed.add(active.sessionId);
+  if (recording?.sessionId) viewed.add(recording.sessionId);
+  for (const session of await allSessions()) {
+    if (!viewed.has(session.id)) await deleteSession(session.id);
+  }
+}
+
+function holdWhileOpening(sessionId) {
+  opening.add(sessionId);
+  setTimeout(() => opening.delete(sessionId), 5000);
+}
+
+void releaseUnviewed().catch((error) => console.error(error));
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void releaseUnviewed(tabId).catch((error) => console.error(error));
 });
 
 // The menu is off while busy, so a click here cancels a capture or stops a
@@ -170,6 +211,7 @@ async function ensureActive(tabId) {
 }
 
 async function openPreview(sessionId) {
+  holdWhileOpening(sessionId);
   const tab = await chrome.tabs.create({
     url: chrome.runtime.getURL(`src/preview.html?id=${sessionId}`),
     active: true,
@@ -178,6 +220,7 @@ async function openPreview(sessionId) {
 }
 
 async function openProgress(sessionId, windowId) {
+  holdWhileOpening(sessionId);
   const url = chrome.runtime.getURL(`src/progress.html?id=${encodeURIComponent(sessionId)}`);
   let left = 80;
   let top = 72;
