@@ -453,7 +453,7 @@ function unpackedExtensionId(dir) {
 }
 
 // Records the fixture for a few seconds while the mouse moves and clicks,
-// then checks the saved file, the video, and that the cursor was removed.
+// then checks the saved file, the video, and that the click overlay was removed.
 async function runRecordFixture(cdp, origin, downloadDir) {
   const pageUrl = `${origin}/fixture.html?record`;
   const worker = await findTarget(
@@ -467,8 +467,8 @@ async function runRecordFixture(cdp, origin, downloadDir) {
   const before = new Set((await cdp.send("Target.getTargets")).targetInfos.map((target) => target.targetId));
   const running = evaluate(cdp, workerSession, `globalThis.pasteshotRecordByUrl(${JSON.stringify(pageUrl)}, 4500)`);
 
-  let cursorSeen = false;
-  let cursorAfterMove = false;
+  let overlaySeen = false;
+  let overlayAfterMove = false;
   let moved = false;
   const deadline = Date.now() + 4000;
   let step = 0;
@@ -480,10 +480,10 @@ async function runRecordFixture(cdp, origin, downloadDir) {
       await cdp.send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 }, pageSession);
       await cdp.send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 }, pageSession);
     }
-    const hasCursor = await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-cursor"))`).catch(() => false);
-    cursorSeen ||= hasCursor;
-    if (moved) cursorAfterMove ||= hasCursor;
-    // Move to another page halfway; the cursor has to be drawn there too.
+    const hasOverlay = await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-clicks"))`).catch(() => false);
+    overlaySeen ||= hasOverlay;
+    if (moved) overlayAfterMove ||= hasOverlay;
+    // Move to another page halfway; clicks have to show there too.
     if (step === 20) {
       await cdp.send("Page.navigate", { url: `${origin}/fixture-inner.html?record` }, pageSession);
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -507,10 +507,10 @@ async function runRecordFixture(cdp, origin, downloadDir) {
   await writeFile("/tmp/pasteshot-record-page.png", Buffer.from(pageShot.data, "base64"));
   const result = await running;
   if (!result?.ok) throw new Error(`record failed: ${JSON.stringify(result)}\n${cdp.logs.join("\n")}`);
-  if (!cursorSeen) throw new Error("record: the cursor overlay never appeared");
-  if (!cursorAfterMove) throw new Error("record: the cursor overlay did not come back after moving to another page");
-  const left = await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-cursor"))`);
-  if (left) throw new Error("record: the cursor overlay was not removed");
+  if (!overlaySeen) throw new Error("record: the click overlay never appeared");
+  if (!overlayAfterMove) throw new Error("record: the click overlay did not come back after moving to another page");
+  const left = await evaluate(cdp, pageSession, `Boolean(document.querySelector("pasteshot-clicks"))`);
+  if (left) throw new Error("record: the click overlay was not removed");
 
   const progress = await findTarget(
     cdp,

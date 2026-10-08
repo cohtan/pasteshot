@@ -39,13 +39,13 @@ If the page is long enough to be split into several images, only the first one i
 
 1. Open the page you want to record.
 2. Click the PasteShot icon and choose "Record this tab".
-3. While the progress window shows the elapsed time, what you do in the tab is recorded. The cursor and where you click are drawn into the video.
+3. While the progress window shows the elapsed time, what you do in the tab is recorded. The cursor and where you click show up in the video.
 4. When you are done, press Stop in the progress window or click the PasteShot icon again. Closing the progress window or the recorded tab also stops it.
 5. The video is saved to your Downloads folder. "Show in folder" opens it.
 
 Videos are saved as MP4, or WebM if the browser cannot write MP4.
 
-Recording continues when you move to another page, and the cursor is drawn again on the new page.
+Recording continues when you move to another page, and clicks keep showing on the new page.
 
 The screens follow the browser's language: Japanese for Japanese, English otherwise.
 
@@ -74,7 +74,6 @@ Choose the resolution on the extension's options page.
 Recording limitations:
 
 - Only the content of the tab you started recording is recorded. The browser's address bar, other tabs, and other apps are not.
-- The cursor in the video is drawn by the extension and is always an arrow. It does not change over text fields or links.
 - No sound is recorded.
 - A recording lasts at most 30 minutes. At 30 minutes it stops by itself and saves what it has.
 - The video keeps the display's pixels, up to 1920px on the long edge.
@@ -93,7 +92,7 @@ Permissions used:
 - `storage`: to save the resolution setting
 - `tabCapture`: to record the tab
 - `downloads`: to save recordings to the Downloads folder
-- Access to all sites: to keep the cursor on pages you move to while recording
+- Access to all sites: to keep showing clicks on pages you move to while recording
 
 ## Development
 
@@ -113,7 +112,7 @@ pnpm test
 | `src/page-hook.js` | Preparing, scrolling, and restoring the page |
 | `src/geometry.js` | Tile placement and splitting the output |
 | `src/stitch.js`, `src/offscreen.*` | Stitching the image and copying it, and recording the tab |
-| `src/cursor.js` | Drawing the cursor and clicks into the page while recording |
+| `src/clicks.js` | Showing where you click in the page while recording |
 | `src/video.js` | Recording format, size, and file name |
 | `src/settings.js` | Reading and writing the resolution setting |
 | `src/db.js` | Storing capture data (IndexedDB) |

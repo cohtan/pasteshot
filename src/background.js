@@ -61,10 +61,10 @@ chrome.windows.onRemoved.addListener((windowId) => {
   }
 });
 
-// A new page in the recorded tab needs the cursor again.
+// A new page in the recorded tab needs the click ripples again.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (recording && !recording.stopping && tabId === recording.tabId && changeInfo.status === "complete") {
-    void injectCursor(tabId);
+    void injectClicks(tabId);
   }
 });
 
@@ -465,19 +465,19 @@ async function runCapture(tab) {
   return result;
 }
 
-async function injectCursor(tabId) {
+async function injectClicks(tabId) {
   const target = { tabId, allFrames: true };
   try {
-    await chrome.scripting.executeScript({ target, files: ["src/cursor.js"] });
+    await chrome.scripting.executeScript({ target, files: ["src/clicks.js"] });
   } catch {
     // Without access to every frame, draw in the top frame at least.
-    await chrome.scripting.executeScript({ target: { tabId }, files: ["src/cursor.js"] }).catch(() => {});
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["src/clicks.js"] }).catch(() => {});
   }
 }
 
-async function removeCursor(tabId) {
+async function removeClicks(tabId) {
   await chrome.scripting
-    .executeScript({ target: { tabId, allFrames: true }, func: () => window.__pasteshotCursor?.remove() })
+    .executeScript({ target: { tabId, allFrames: true }, func: () => window.__pasteshotClicks?.remove() })
     .catch(() => {});
 }
 
@@ -532,7 +532,7 @@ async function runRecording(tab) {
     const size = videoSize(viewport.width, viewport.height, viewport.ratio);
     const started = await callOffscreen(sessionId, { type: "record-start", streamId, ...size });
     if (!started?.ok) throw new Error(started?.error || "record failed");
-    await injectCursor(tabId);
+    await injectClicks(tabId);
     await updateSession(sessionId, { phase: "record", startedAt: Date.now(), videoType: started.mimeType });
     await setBadge("REC");
     await chrome.action.setBadgeBackgroundColor({ color: "#c62828" }).catch(() => {});
@@ -555,7 +555,7 @@ async function runRecording(tab) {
 
 async function finishRecording(tabId) {
   clearTimeout(recording?.timer);
-  await removeCursor(tabId);
+  await removeClicks(tabId);
   await setBadge("");
   await chrome.action.setTitle({ title: t("actionTitle") }).catch(() => {});
   await chrome.offscreen.closeDocument().catch(() => {});
