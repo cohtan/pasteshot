@@ -114,6 +114,7 @@ pnpm test
 | `src/video.js` | 録画の形式、大きさ、ファイル名 |
 | `src/settings.js` | 解像度の設定の読み書き |
 | `src/db.js` | 撮影データの保存(IndexedDB) |
+| `src/messages.js` | 拡張自身からのメッセージだけを受け付ける |
 | `src/popup.*`, `src/progress.*`, `src/preview.*`, `src/options.*` | 各画面 |
 | `src/i18n.js`, `_locales/` | 画面の文言(日本語と英語。ブラウザの言語で切り替わります) |
 | `tools/make-icons.py` | アイコンの生成(`python3 tools/make-icons.py`、Pillow が必要) |
