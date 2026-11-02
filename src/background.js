@@ -10,6 +10,7 @@ import {
 } from "./db.js";
 import { MAX_TILES, scrollStops } from "./geometry.js";
 import { t } from "./i18n.js";
+import { fromExtension } from "./messages.js";
 import { getResolution } from "./settings.js";
 import { MAX_RECORD_MS, recordingFileName, videoSize } from "./video.js";
 
@@ -77,8 +78,8 @@ chrome.action.onClicked.addListener((tab) => {
   else void runCapture(tab);
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.target !== "background") return;
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.target !== "background" || !fromExtension(sender)) return;
   if (message.type === "start") {
     // From the menu. Answer first so the menu can close.
     sendResponse({ ok: !running });

@@ -116,6 +116,7 @@ pnpm test
 | `src/video.js` | Recording format, size, and file name |
 | `src/settings.js` | Reading and writing the resolution setting |
 | `src/db.js` | Storing capture data (IndexedDB) |
+| `src/messages.js` | Accepting messages only from the extension itself |
 | `src/popup.*`, `src/progress.*`, `src/preview.*`, `src/options.*` | The screens |
 | `src/i18n.js`, `_locales/` | Screen text (Japanese and English, picked by the browser language) |
 | `tools/make-icons.py` | Generates the icons (`python3 tools/make-icons.py`, needs Pillow) |

@@ -1,4 +1,5 @@
 import { deleteTiles, getSession, tilesFor, updateSession } from "./db.js";
+import { fromExtension } from "./messages.js";
 import { copyPng, stitch } from "./stitch.js";
 import { pickMimeType, VIDEO_BITS_PER_SECOND } from "./video.js";
 
@@ -7,8 +8,8 @@ const KEEPALIVE_MS = 20000;
 // The recording in progress: { sessionId, stream, recorder, chunks, finished, timer }.
 let recording = null;
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.target !== "offscreen") return;
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.target !== "offscreen" || !fromExtension(sender)) return;
   const handlers = {
     "record-start": () => startRecording(message),
     "record-stop": () => stopRecording(message.sessionId),

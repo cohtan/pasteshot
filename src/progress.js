@@ -1,5 +1,6 @@
 import { getSession, updateSession } from "./db.js";
 import { localize, t } from "./i18n.js";
+import { fromExtension } from "./messages.js";
 import { copyPng } from "./stitch.js";
 import { extensionForVideo, formatElapsed } from "./video.js";
 
@@ -50,8 +51,9 @@ async function fitWindow(height) {
   }
 }
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.target !== "progress" || message.sessionId !== sessionId || message.type !== "copy") return;
+  if (!fromExtension(sender)) return;
   void copyStored(0)
     .then(() => sendResponse({ ok: true, method: "progress" }))
     .catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
